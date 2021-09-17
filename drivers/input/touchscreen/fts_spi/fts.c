@@ -3609,6 +3609,25 @@ static ssize_t fts_secure_touch_show (struct device *dev, struct device_attribut
 	return scnprintf(buf, PAGE_SIZE, "%d", value);
 }
 #endif
+
+#ifdef GESTURE_MODE
+static ssize_t fts_double_tap_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+    return sprintf(buf, "%d\n", fts_info->gesture_enabled);
+}
+
+static ssize_t fts_double_tap_store(struct device *dev, struct device_attribute *attr,
+				    const char *buf, size_t count)
+{
+	struct fts_ts_info *info = dev_get_drvdata(dev);
+
+	sscanf(buf, "%u", &info->gesture_enabled);
+	queue_work(info->event_wq, &info->mode_handler_work);
+
+	return count;
+}
+#endif
+
 static DEVICE_ATTR(fts_lockdown, (S_IRUGO | S_IWUSR | S_IWGRP),
 		   fts_lockdown_show, fts_lockdown_store);
 static DEVICE_ATTR(fwupdate, (S_IRUGO | S_IWUSR | S_IWGRP), fts_fwupdate_show,
@@ -3673,6 +3692,11 @@ static DEVICE_ATTR(grip_enable, (S_IRUGO | S_IWUSR | S_IWGRP),
 		   fts_grip_enable_show, fts_grip_enable_store);
 static DEVICE_ATTR(grip_area, (S_IRUGO | S_IWUSR | S_IWGRP),
 		   fts_grip_area_show, fts_grip_area_store);
+
+#ifdef GESTURE_MODE
+static DEVICE_ATTR(double_tap, (S_IRUGO | S_IWUSR | S_IWGRP),
+		   fts_double_tap_show, fts_double_tap_store);
+#endif
 
 static DEVICE_ATTR(hover_tune, (S_IRUGO | S_IWUSR | S_IWGRP), NULL, fts_hover_autotune_store);
 
@@ -8854,6 +8878,13 @@ static int fts_probe(struct spi_device *client)
 	if (error) {
 		logError(1, "%s Error: Failed to create ellipse_data sysfs group!\n", tag);
 	}
+
+#ifdef GESTURE_MODE
+	error = sysfs_create_file(&info->fts_touch_dev->kobj, &dev_attr_double_tap.attr);
+	if (error)
+		logError(1, "%s ERROR: Failed to create double_tap sysfs group!\n", tag);
+#endif
+
 	info->tp_lockdown_info_proc =
 	    proc_create("tp_lockdown_info", 0444, NULL, &fts_lockdown_info_ops);
 	info->tp_data_dump_proc =
