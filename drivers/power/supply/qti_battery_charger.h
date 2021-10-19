@@ -491,6 +491,7 @@ struct battery_chg_dev {
 	u32				restrict_fcc_ua;
 	u32				last_fcc_ua;
 	u32				usb_icl_ua;
+	u32				thermal_fcc_step;
 	u32				reverse_chg_flag;
 	u32				boost_mode;
 	bool				restrict_chg_en;
