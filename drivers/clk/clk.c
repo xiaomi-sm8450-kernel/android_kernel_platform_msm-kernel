@@ -3468,6 +3468,7 @@ static int __clk_core_init(struct clk_core *core)
 		return -EINVAL;
 
 	clk_prepare_lock();
+	core->hw->core = core;
 
 	/*
 	 * Set hw->core after grabbing the prepare_lock to synchronize with
