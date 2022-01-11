@@ -11,6 +11,7 @@
 
 /* opcode for battery charger */
 #define BC_SET_NOTIFY_REQ		0x04
+#define BC_DISABLE_NOTIFY_REQ		0x05
 #define BC_NOTIFY_IND			0x07
 #define BC_BATTERY_STATUS_GET		0x30
 #define BC_BATTERY_STATUS_SET		0x31
@@ -465,6 +466,7 @@ struct battery_chg_dev {
 	struct completion		fw_update_ack;
 	struct psy_state		psy_list[PSY_TYPE_MAX];
 	struct dentry			*debugfs_dir;
+	void				*notifier_cookie;
 	u32				*thermal_levels;
 	const char			*wls_fw_name;
 	int				curr_thermal_level;
@@ -504,6 +506,7 @@ struct battery_chg_dev {
 	struct delayed_work		panel_sec_notify_register_work;
 	/* To track the driver initialization status */
 	bool				initialized;
+	bool				notify_en;
 	u8				*digest;
 	u32				*ss_auth_data;
 	char				wls_debug_data[MAX_STR_LEN];
