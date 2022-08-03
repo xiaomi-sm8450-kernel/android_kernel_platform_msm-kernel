@@ -209,6 +209,7 @@ void release_all_touches(struct fts_ts_info *info)
 	info->width_minor = 0;
 	info->orientation = 0;
 	info->fod_pressed = false;
+	sysfs_notify(&info->dev->kobj, NULL, "fod_pressed");
 #ifdef STYLUS_MODE
 	info->stylus_id = 0;
 #endif
@@ -3185,6 +3186,7 @@ static ssize_t fts_fod_test_store(struct device *dev,
 		input_report_key(info->input_dev, BTN_INFO, 1);
 		update_fod_press_status(1);
 		info->fod_pressed = true;
+		sysfs_notify(&info->dev->kobj, NULL, "fod_pressed");
 		input_sync(info->input_dev);
 		input_mt_slot(info->input_dev, 0);
 		input_mt_report_slot_state(info->input_dev, MT_TOOL_FINGER, 1);
@@ -3222,6 +3224,7 @@ static void fts_set_fod_downup(struct fts_ts_info *info, int enable)
 		update_fod_press_status(0);
 		input_sync(info->input_dev);
 	}
+	sysfs_notify(&info->dev->kobj, NULL, "fod_pressed");
 }
 #endif
 static ssize_t fts_ellipse_data_show(struct device *dev,
@@ -3621,6 +3624,33 @@ end:
 	return count;
 }
 
+#ifdef FTS_FOD_AREA_REPORT
+static ssize_t fts_fod_pressed_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	struct fts_ts_info *info = dev_get_drvdata(dev);
+
+	return snprintf(buf, TSP_BUF_SIZE, "%d\n", info->fod_pressed);
+}
+
+static ssize_t fts_fod_status_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	struct fts_ts_info *info = dev_get_drvdata(dev);
+
+	return snprintf(buf, TSP_BUF_SIZE, "%d\n", info->fod_status);
+}
+
+static int fts_set_fod_status(int value);
+
+static ssize_t fts_fod_status_store(struct device *dev, struct device_attribute *attr,
+				    const char *buf, size_t count)
+{
+	int value;
+	sscanf(buf, "%u", &value);
+	fts_set_fod_status(value);
+
+	return count;
+}
+#endif
 
 static DEVICE_ATTR(fts_lockdown, (S_IRUGO | S_IWUSR | S_IWGRP),
 		   fts_lockdown_show, fts_lockdown_store);
@@ -3697,6 +3727,14 @@ static DEVICE_ATTR(fod_area, (S_IRUGO | S_IWUSR | S_IWGRP),
 		   fts_fod_area_show, fts_fod_area_store);
 static DEVICE_ATTR(cmd_fifo, (S_IRUGO | S_IWUSR | S_IWGRP),
 		   fts_cmdfifo_show, NULL);
+
+#ifdef FTS_FOD_AREA_REPORT
+static DEVICE_ATTR(fod_pressed, (S_IRUGO | S_IWUSR | S_IWGRP),
+		   fts_fod_pressed_show, NULL);
+static DEVICE_ATTR(fod_status, (S_IRUGO | S_IWUSR | S_IWGRP),
+		   fts_fod_status_show, fts_fod_status_store);
+#endif
+
 static struct attribute *fts_attr_group[] = {
 	&dev_attr_fwupdate.attr,
 	&dev_attr_appid.attr,
@@ -3748,6 +3786,10 @@ static struct attribute *fts_attr_group[] = {
 #endif
 	&dev_attr_fod_area.attr,
 	&dev_attr_cmd_fifo.attr,
+#ifdef FTS_FOD_AREA_REPORT
+	&dev_attr_fod_pressed.attr,
+	&dev_attr_fod_status.attr,
+#endif
 	NULL,
 };
 
@@ -3996,6 +4038,7 @@ static void fts_enter_pointer_event_handler(struct fts_ts_info *info,
 			info->fod_y = 0;
 			info->fod_coordinate_update = false;
 			info->fod_pressed = false;
+			sysfs_notify(&info->dev->kobj, NULL, "fod_pressed");
 			logError(1, "%s  %s :  FOD Release :%d\n", tag, __func__, touchId);
 			__clear_bit(touchId, &info->sleep_finger);
 		}
@@ -4120,6 +4163,7 @@ static void fts_leave_pointer_event_handler(struct fts_ts_info *info,
 #endif
 
 		info->fod_pressed = false;
+		sysfs_notify(&info->dev->kobj, NULL, "fod_pressed");
 		input_report_key(info->input_dev, BTN_INFO, 0);
 		update_fod_press_status(0);
 
@@ -4508,6 +4552,7 @@ static void fts_gesture_event_handler(struct fts_ts_info *info,
 
 				if ((info->sensor_sleep && !info->sleep_finger) || !info->sensor_sleep) {
 					info->fod_pressed = true;
+					sysfs_notify(&info->dev->kobj, NULL, "fod_pressed");
 					input_report_key(info->input_dev, BTN_INFO, 1);
 					update_fod_press_status(1);
 					input_sync(info->input_dev);
@@ -7023,6 +7068,7 @@ static void fts_suspend_work(struct work_struct *work)
 	fts_mode_handler(info, 0);
 	release_all_touches(info);
 	info->fod_pressed = false;
+	sysfs_notify(&info->dev->kobj, NULL, "fod_pressed");
 	info->sensor_sleep = true;
 #ifdef CONFIG_TOUCH_FACTORY_BUILD
 	retval = fts_enable_reg(info, false);
