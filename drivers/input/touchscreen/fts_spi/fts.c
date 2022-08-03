@@ -3609,6 +3609,53 @@ static ssize_t fts_secure_touch_show (struct device *dev, struct device_attribut
 	return scnprintf(buf, PAGE_SIZE, "%d", value);
 }
 #endif
+
+#ifdef GESTURE_MODE
+static ssize_t fts_double_tap_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+    return sprintf(buf, "%d\n", fts_info->gesture_enabled);
+}
+
+static ssize_t fts_double_tap_store(struct device *dev, struct device_attribute *attr,
+				    const char *buf, size_t count)
+{
+	struct fts_ts_info *info = dev_get_drvdata(dev);
+
+	sscanf(buf, "%u", &info->gesture_enabled);
+	queue_work(info->event_wq, &info->cmd_update_work);
+
+	return count;
+}
+#endif
+
+#ifdef FTS_FOD_AREA_REPORT
+static ssize_t fts_fod_down_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	struct fts_ts_info *info = dev_get_drvdata(dev);
+
+	return snprintf(buf, TSP_BUF_SIZE, "%d\n", info->fod_down);
+}
+
+static ssize_t fts_fod_status_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	struct fts_ts_info *info = dev_get_drvdata(dev);
+
+	return snprintf(buf, TSP_BUF_SIZE, "%d\n", info->fod_status);
+}
+
+static int fts_set_fod_status(int value);
+
+static ssize_t fts_fod_status_store(struct device *dev, struct device_attribute *attr,
+				    const char *buf, size_t count)
+{
+	int value;
+	sscanf(buf, "%u", &value);
+	fts_set_fod_status(value);
+
+	return count;
+}
+#endif
+
 static DEVICE_ATTR(fts_lockdown, (S_IRUGO | S_IWUSR | S_IWGRP),
 		   fts_lockdown_show, fts_lockdown_store);
 static DEVICE_ATTR(fwupdate, (S_IRUGO | S_IWUSR | S_IWGRP), fts_fwupdate_show,
@@ -3682,6 +3729,19 @@ static DEVICE_ATTR(touchgame, (S_IRUGO | S_IWUSR | S_IWGRP),
 #endif
 static DEVICE_ATTR(fod_area, (S_IRUGO | S_IWUSR | S_IWGRP),
 		   fts_fod_area_show, fts_fod_area_store);
+
+#ifdef GESTURE_MODE
+static DEVICE_ATTR(double_tap, (S_IRUGO | S_IWUSR | S_IWGRP),
+		   fts_double_tap_show, fts_double_tap_store);
+#endif
+
+#ifdef FTS_FOD_AREA_REPORT
+static DEVICE_ATTR(fod_down, (S_IRUGO | S_IWUSR | S_IWGRP),
+		   fts_fod_down_show, NULL);
+static DEVICE_ATTR(fod_status, (S_IRUGO | S_IWUSR | S_IWGRP),
+		   fts_fod_status_show, fts_fod_status_store);
+#endif
+
 static struct attribute *fts_attr_group[] = {
 	&dev_attr_fwupdate.attr,
 	&dev_attr_appid.attr,
@@ -3732,6 +3792,13 @@ static struct attribute *fts_attr_group[] = {
 	&dev_attr_touchgame.attr,
 #endif
 	&dev_attr_fod_area.attr,
+#ifdef GESTURE_MODE
+	&dev_attr_double_tap.attr,
+#endif
+#ifdef FTS_FOD_AREA_REPORT
+	&dev_attr_fod_down.attr,
+	&dev_attr_fod_status.attr,
+#endif
 	NULL,
 };
 
@@ -3958,6 +4025,7 @@ static void fts_enter_pointer_event_handler(struct fts_ts_info *info,
 			info->fod_y = 0;
 			info->fod_coordinate_update = false;
 			info->fod_down = false;
+			sysfs_notify(&info->dev->kobj, NULL, "fod_down");
 			logError(1, "%s  %s :  FOD Release :%d\n", tag, __func__, touchId);
 			__clear_bit(touchId, &info->sleep_finger);
 		}
@@ -4099,7 +4167,7 @@ static void fts_leave_pointer_event_handler(struct fts_ts_info *info,
 	}
 	last_touch_events_collect(touchId, 0);
 	info->fod_down = false;
-
+	sysfs_notify(&info->dev->kobj, NULL, "fod_down");
 	input_sync(info->input_dev);
 exit:
 	return;
@@ -4460,6 +4528,7 @@ static void fts_gesture_event_handler(struct fts_ts_info *info,
 			if (!info->fod_down) {
 				logError(1, "%s %s Fod Down\n", tag, __func__);
 				info->fod_down = true;
+				sysfs_notify(&info->dev->kobj, NULL, "fod_down");
 			}
 			touch_area = (event[9] << 8) | (event[8]);
 			fod_overlap = (event[11] << 8) | (event[10]);
