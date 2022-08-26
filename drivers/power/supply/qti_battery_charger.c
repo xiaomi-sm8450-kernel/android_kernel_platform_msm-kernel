@@ -253,7 +253,6 @@ struct battery_chg_dev {
 	u32				restrict_fcc_ua;
 	u32				last_fcc_ua;
 	u32				usb_icl_ua;
-	u32				thermal_fcc_step;
 	bool				restrict_chg_en;
 	/* To track the driver initialization status */
 	bool				initialized;
@@ -1143,12 +1142,7 @@ static int battery_psy_set_charge_current(struct battery_chg_dev *bcdev,
 	if (val < 0 || val > bcdev->num_thermal_levels)
 		return -EINVAL;
 
-	if (bcdev->thermal_fcc_step == 0)
-		fcc_ua = bcdev->thermal_levels[val];
-	else
-		fcc_ua = bcdev->psy_list[PSY_TYPE_BATTERY].prop[BATT_CHG_CTRL_LIM_MAX]
-				- (bcdev->thermal_fcc_step * val);
-
+	fcc_ua = bcdev->thermal_levels[val];
 	prev_fcc_ua = bcdev->thermal_fcc_ua;
 	bcdev->thermal_fcc_ua = fcc_ua;
 
@@ -1973,6 +1967,12 @@ static int battery_chg_parse_dt(struct battery_chg_dev *bcdev)
 	of_property_read_u32(node, "qcom,shutdown-voltage",
 				&bcdev->shutdown_volt_mv);
 
+	rc = of_property_count_elems_of_size(node, "qcom,thermal-mitigation",
+						sizeof(u32));
+	if (rc <= 0)
+		return 0;
+
+	len = rc;
 
 	rc = read_property_id(bcdev, pst, BATT_CHG_CTRL_LIM_MAX);
 	if (rc < 0) {
@@ -1981,70 +1981,41 @@ static int battery_chg_parse_dt(struct battery_chg_dev *bcdev)
 		return rc;
 	}
 
-	rc = of_property_count_elems_of_size(node, "qcom,thermal-mitigation",
-						sizeof(u32));
-	if (rc <= 0) {
+	prev = pst->prop[BATT_CHG_CTRL_LIM_MAX];
 
-		rc = of_property_read_u32(node, "qcom,thermal-mitigation-step",
-						&val);
-
+	for (i = 0; i < len; i++) {
+		rc = of_property_read_u32_index(node, "qcom,thermal-mitigation",
+						i, &val);
 		if (rc < 0)
-			return 0;
-
-		if (val < 500000 || val >= pst->prop[BATT_CHG_CTRL_LIM_MAX]) {
-			pr_err("thermal_fcc_step %d is invalid\n", val);
-			return -EINVAL;
-		}
-
-		bcdev->thermal_fcc_step = val;
-		len = pst->prop[BATT_CHG_CTRL_LIM_MAX] / bcdev->thermal_fcc_step;
-
-		/*
-		 * FCC values must be above 500mA.
-		 * Since len is truncated when calculated, check and adjust len so
-		 * that the above requirement is met.
-		 */
-		if (pst->prop[BATT_CHG_CTRL_LIM_MAX] - (bcdev->thermal_fcc_step * len) < 500000)
-			len = len - 1;
-	} else {
-		bcdev->thermal_fcc_step = 0;
-		len = rc;
-		prev = pst->prop[BATT_CHG_CTRL_LIM_MAX];
-
-		for (i = 0; i < len; i++) {
-			rc = of_property_read_u32_index(node, "qcom,thermal-mitigation",
-				i, &val);
-			if (rc < 0)
-				return rc;
-
-			if (val > prev) {
-				pr_err("Thermal levels should be in descending order\n");
-				bcdev->num_thermal_levels = -EINVAL;
-				return 0;
-			}
-
-			prev = val;
-		}
-
-		bcdev->thermal_levels = devm_kcalloc(bcdev->dev, len + 1,
-						sizeof(*bcdev->thermal_levels),
-						GFP_KERNEL);
-		if (!bcdev->thermal_levels)
-			return -ENOMEM;
-
-		/*
-		 * Element 0 is for normal charging current. Elements from index 1
-		 * onwards is for thermal mitigation charging currents.
-		 */
-
-		bcdev->thermal_levels[0] = pst->prop[BATT_CHG_CTRL_LIM_MAX];
-
-		rc = of_property_read_u32_array(node, "qcom,thermal-mitigation",
-					&bcdev->thermal_levels[1], len);
-		if (rc < 0) {
-			pr_err("Error in reading qcom,thermal-mitigation, rc=%d\n", rc);
 			return rc;
+
+		if (val > prev) {
+			pr_err("Thermal levels should be in descending order\n");
+			bcdev->num_thermal_levels = -EINVAL;
+			return 0;
 		}
+
+		prev = val;
+	}
+
+	bcdev->thermal_levels = devm_kcalloc(bcdev->dev, len + 1,
+					sizeof(*bcdev->thermal_levels),
+					GFP_KERNEL);
+	if (!bcdev->thermal_levels)
+		return -ENOMEM;
+
+	/*
+	 * Element 0 is for normal charging current. Elements from index 1
+	 * onwards is for thermal mitigation charging currents.
+	 */
+
+	bcdev->thermal_levels[0] = pst->prop[BATT_CHG_CTRL_LIM_MAX];
+
+	rc = of_property_read_u32_array(node, "qcom,thermal-mitigation",
+					&bcdev->thermal_levels[1], len);
+	if (rc < 0) {
+		pr_err("Error in reading qcom,thermal-mitigation, rc=%d\n", rc);
+		return rc;
 	}
 
 	bcdev->num_thermal_levels = len;
