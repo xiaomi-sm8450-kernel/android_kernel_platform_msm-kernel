@@ -1840,7 +1840,7 @@ ATTRIBUTE_GROUPS(battery_class);
 static void battery_chg_add_debugfs(struct battery_chg_dev *bcdev)
 {
 	int rc;
-	struct dentry *dir;
+	struct dentry *dir, *file;
 
 	dir = debugfs_create_dir("battery_charger", NULL);
 	if (IS_ERR(dir)) {
@@ -1850,8 +1850,19 @@ static void battery_chg_add_debugfs(struct battery_chg_dev *bcdev)
 		return;
 	}
 
+	file = debugfs_create_bool("block_tx", 0600, dir, &bcdev->block_tx);
+	if (IS_ERR(file)) {
+		rc = PTR_ERR(file);
+		pr_err("Failed to create block_tx debugfs file, rc=%d\n",
+			rc);
+		goto error;
+	}
+
 	bcdev->debugfs_dir = dir;
-	debugfs_create_bool("block_tx", 0600, dir, &bcdev->block_tx);
+
+	return;
+error:
+	debugfs_remove_recursive(dir);
 }
 #else
 static void battery_chg_add_debugfs(struct battery_chg_dev *bcdev) { }
