@@ -1,22 +1,21 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 /*
-
  **************************************************************************
- **                        STMicroelectronics							 **
+ **                        STMicroelectronics                            **
  **************************************************************************
- **                        marco.cali@st.com							 **
+ **                        marco.cali@st.com                             **
  **************************************************************************
  *                                                                        *
- *                     Utilities published in /proc/fts					  *
+ *                     Utilities published in /proc/fts                   *
  *                                                                        *
  **************************************************************************
  **************************************************************************
-
  */
 
 /*!
-* \file fts_proc.c
-* \brief contains the function and variables needed to publish a file node in the file system which allow to communicate with the IC from userspace
-*/
+ * \file fts_proc.c
+ * \brief contains the function and variables needed to publish a file node in the file system which allow to communicate with the IC from userspace
+ */
 
 #include <linux/init.h>
 #include <linux/kernel.h>
@@ -43,12 +42,12 @@
 #define DIAGNOSTIC_NUM_FRAME								10
 
 /** @defgroup proc_file_code	 Proc File Node
-* @ingroup file_nodes
-* The /proc/fts/driver_test file node provide expose the most important API implemented into the driver to execute any possible operation into the IC \n
-* Thanks to a series of Operation Codes, each of them, with a different set of parameter, it is possible to select a function to execute\n
-* The result of the function is usually returned into the shell as an ASCII hex string where each byte is encoded in two chars.\n
-* @{
-*/
+ * @ingroup file_nodes
+ * The /proc/fts/driver_test file node provide expose the most important API implemented into the driver to execute any possible operation into the IC \n
+ * Thanks to a series of Operation Codes, each of them, with a different set of parameter, it is possible to select a function to execute\n
+ * The result of the function is usually returned into the shell as an ASCII hex string where each byte is encoded in two chars.\n
+ * @{
+ */
 
 /*Bus operations*/
 #define CMD_READ											0x00
@@ -126,7 +125,7 @@
 #define CMD_CHANGE_SAD										0x70
 
 static u8 bin_output;
-/** @}*/
+
 
 /** @defgroup scriptless Scriptless Protocol
  * @ingroup proc_file_code
@@ -167,8 +166,6 @@ typedef struct {
 	u8 dummy;
 } Message;
 
-/** @}*/
-
 extern TestToDo tests;
 extern SysInfo systemInfo;
 
@@ -179,23 +176,23 @@ static struct proc_dir_entry *fts_dir;
 static u8 *driver_test_buff;
 char buf_chunk[CHUNK_PROC];
 static Message mess;
-#if 0
+
 /************************ SEQUENTIAL FILE UTILITIES **************************/
 /**
-* This function is called at the beginning of the stream to a sequential file or every time into the sequential were already written PAGE_SIZE bytes and the stream need to restart
-* @param s pointer to the sequential file on which print the data
-* @param pos pointer to the offset where write the data
-* @return NULL if there is no data to print or the pointer to the beginning of the data that need to be printed
-*/
+ * This function is called at the beginning of the stream to a sequential file or every time into the sequential were already written PAGE_SIZE bytes and the stream need to restart
+ * @param s pointer to the sequential file on which print the data
+ * @param pos pointer to the offset where write the data
+ * @return NULL if there is no data to print or the pointer to the beginning of the data that need to be printed
+ */
 static void *fts_seq_start(struct seq_file *s, loff_t *pos)
 {
 	logError(0,
-		 "%s %s: Entering start(), pos = %Ld limit = %d printed = %d \n",
+		 "%s %s: Entering start(), pos = %lld limit = %d printed = %d\n",
 		 tag, __func__, *pos, limit, printed);
 
 	if (driver_test_buff == NULL && *pos == 0) {
 		logError(1, "%s %s: No data to print!\n", tag, __func__);
-		driver_test_buff = (u8 *) kmalloc(13 * sizeof(u8), GFP_KERNEL);
+		driver_test_buff = kmalloc(13 * sizeof(u8), GFP_KERNEL);
 
 		snprintf(driver_test_buff, PAGE_SIZE, "{ %08X }\n", ERROR_OP_NOT_ALLOW);
 
@@ -204,9 +201,8 @@ static void *fts_seq_start(struct seq_file *s, loff_t *pos)
 		if (*pos != 0)
 			*pos += chunk - 1;
 
-		if (*pos >= limit) {
+		if (*pos >= limit)
 			return NULL;
-		}
 	}
 
 	chunk = CHUNK_PROC;
@@ -219,11 +215,11 @@ static void *fts_seq_start(struct seq_file *s, loff_t *pos)
 }
 
 /**
-* This function actually print a chunk amount of data in the sequential file
-* @param s pointer to the sequential file where to print the data
-* @param v pointer to the data to print
-* @return 0
-*/
+ * This function actually print a chunk amount of data in the sequential file
+ * @param s pointer to the sequential file where to print the data
+ * @param v pointer to the data to print
+ * @return 0
+ */
 static int fts_seq_show(struct seq_file *s, void *v)
 {
 	seq_write(s, (u8 *) v, chunk);
@@ -232,12 +228,12 @@ static int fts_seq_show(struct seq_file *s, void *v)
 }
 
 /**
-* This function update the pointer and the counters to the next data to be printed
-* @param s pointer to the sequential file where to print the data
-* @param v pointer to the data to print
-* @param pos pointer to the offset where write the next data
-* @return NULL if there is no data to print or the pointer to the beginning of the next data that need to be printed
-*/
+ * This function update the pointer and the counters to the next data to be printed
+ * @param s pointer to the sequential file where to print the data
+ * @param v pointer to the data to print
+ * @param pos pointer to the offset where write the next data
+ * @return NULL if there is no data to print or the pointer to the beginning of the next data that need to be printed
+ */
 static void *fts_seq_next(struct seq_file *s, void *v, loff_t *pos)
 {
 	(*pos) += chunk;
@@ -245,10 +241,10 @@ static void *fts_seq_next(struct seq_file *s, void *v, loff_t *pos)
 
 	if (*pos >= limit)
 		return NULL;
-	else {
-		if (limit - *pos < CHUNK_PROC)
-			chunk = limit - *pos;
-	}
+
+	if (limit - *pos < CHUNK_PROC)
+		chunk = limit - *pos;
+
 
 	memset(buf_chunk, 0, CHUNK_PROC);
 	memcpy(buf_chunk, &driver_test_buff[(int)*pos], chunk);
@@ -256,10 +252,10 @@ static void *fts_seq_next(struct seq_file *s, void *v, loff_t *pos)
 }
 
 /**
-* This function is called when there are no more data to print  the stream need to be terminated or when PAGE_SIZE data were already written into the sequential file
-* @param s pointer to the sequential file where to print the data
-* @param v pointer returned by fts_seq_next
-*/
+ * This function is called when there are no more data to print  the stream need to be terminated or when PAGE_SIZE data were already written into the sequential file
+ * @param s pointer to the sequential file where to print the data
+ * @param v pointer returned by fts_seq_next
+ */
 static void fts_seq_stop(struct seq_file *s, void *v)
 {
 
@@ -281,9 +277,9 @@ static void fts_seq_stop(struct seq_file *s, void *v)
 }
 
 /**
-* Struct where define and specify the functions which implements the flow for writing on a sequential file
-*/
-static struct seq_operations fts_seq_ops = {
+ * Struct where define and specify the functions which implements the flow for writing on a sequential file
+ */
+static const struct seq_operations fts_seq_ops = {
 	.start = fts_seq_start,
 	.next = fts_seq_next,
 	.stop = fts_seq_stop,
@@ -291,51 +287,17 @@ static struct seq_operations fts_seq_ops = {
 };
 
 /**
-* This function open a sequential file
-* @param inode Inode in the file system that was called and triggered this function
-* @param file file associated to the file node
-* @return error code, 0 if success
-*/
+ * This function open a sequential file
+ * @param inode Inode in the file system that was called and triggered this function
+ * @param file associated to the file node
+ * @return error code, 0 if success
+ */
 static int fts_open(struct inode *inode, struct file *file)
 {
 	return seq_open(file, &fts_seq_ops);
 };
-#endif
+
 /*****************************************************************************/
-static ssize_t fts_driver_test_read(struct file *file, char __user *buf,
-				 size_t count, loff_t *pos)
-{
-	int cnt;
-
-	if (*pos == 0) {
-		if (driver_test_buff == NULL) {
-			driver_test_buff = (u8 *) kmalloc(13 * sizeof(u8), GFP_KERNEL);
-			cnt = snprintf(driver_test_buff, PAGE_SIZE, "{ %08X }\n", ERROR_OP_NOT_ALLOW);
-			copy_to_user(buf, driver_test_buff, cnt);
-			return 0;
-		}
-		chunk = CHUNK_PROC;
-	}
-	if (*pos >= limit) {
-		if (driver_test_buff)
-			kfree(driver_test_buff);
-		driver_test_buff = NULL;
-		logError(1, "%s %s free memory\n", tag, __func__);
-		return 0;
-	} else {
-		if (limit - *pos < CHUNK_PROC)
-			chunk = limit - *pos;
-	}
-	logError(1, "%s %s *pos = %d limit:%d, chunk:%d++\n", tag, __func__, (int)*pos, limit, chunk);
-
-	if (copy_to_user(buf, &driver_test_buff[(int)*pos], chunk)) {
-		return -EFAULT;
-	}
-	(*pos) += chunk;
-	logError(1, "%s %s *pos = %d --\n", tag, __func__, (int)*pos);
-
-	return chunk;
-}
 
 /**************************** DRIVER TEST ************************************/
 
@@ -345,7 +307,7 @@ static ssize_t fts_driver_test_read(struct file *file, char __user *buf,
 /**
  * Receive the OP code and the inputs from shell when the file node is called, parse it and then execute the corresponding function
  * echo cmd+parameters > /proc/fts/driver_test to execute the select command
- * cat /proc/fts/driver_test			to obtain the result into the shell \n
+ * cat /proc/fts/driver_test to obtain the result into the shell \n
  * the string returned in the shell is made up as follow: \n
  * { = start byte \n
  * the answer content and format strictly depend on the cmd executed. In general can be: an HEX string or a byte array (e.g in case of 0xF- commands) \n
@@ -385,25 +347,26 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 	LimitFile lim;
 
 	const char *limit_file_name = NULL;
+
 	limit_file_name = fts_get_limit(info);
 
 	mess.dummy = 0;
 	mess.action = 0;
 	mess.msg_size = 0;
 
-	cmd = (u8 *)kzalloc(sizeof(u8) * count, GFP_KERNEL);
+	cmd = kcalloc(count, sizeof(u8), GFP_KERNEL);
 	if (!cmd) {
 		res = -ENOMEM;
 		goto END;
 	}
 
-	pbuf = (u8 *)kzalloc(sizeof(u8) * count, GFP_KERNEL);
+	pbuf = kzalloc(sizeof(u8) * count, GFP_KERNEL);
 	if (!pbuf) {
 		res = -ENOMEM;
 		goto END;
 	}
 
-	funcToTest = (u32 *)kzalloc(sizeof(u32) * ((count + 1) / 3), GFP_KERNEL);
+	funcToTest = kzalloc(sizeof(u32) * ((count + 1) / 3), GFP_KERNEL);
 	if (!funcToTest) {
 		res = -ENOMEM;
 		goto END;
@@ -417,13 +380,13 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 
 	p = pbuf;
 	if (count > MESSAGE_MIN_HEADER_SIZE - 1 && p[0] == MESSAGE_START_BYTE) {
-		logError(0, "%s Enter in Byte Mode! \n", tag);
+		logError(0, "%s Enter in Byte Mode!\n", tag);
 		byte_call = 1;
 		mess.msg_size = (p[1] << 8) | p[2];
 		mess.counter = (p[3] << 8) | p[4];
 		mess.action = (p[5] << 8) | p[6];
 		logError(0,
-			 "%s Message received: size = %d, counter_id = %d, action = %04X \n",
+			 "%s Message received: size = %d, counter_id = %d, action = %04X\n",
 			 tag, mess.msg_size, mess.counter, mess.action);
 		size = MESSAGE_MIN_HEADER_SIZE + 2;
 		if (count < mess.msg_size || p[count - 2] != MESSAGE_END_BYTE) {
@@ -455,8 +418,7 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 				break;
 
 			case ACTION_WRITETHENWRITEREAD:
-				cmd[0] = funcToTest[0] =
-				    CMD_WRITETHENWRITEREAD_BYTE;
+				cmd[0] = funcToTest[0] = CMD_WRITETHENWRITEREAD_BYTE;
 				break;
 
 			case ACTION_WRITEU8UX:
@@ -468,13 +430,11 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 				break;
 
 			case ACTION_WRITEU8UXTHENWRITEU8UX:
-				cmd[0] = funcToTest[0] =
-				    CMD_WRITEU8UXTHENWRITEU8UX_BYTE;
+				cmd[0] = funcToTest[0] = CMD_WRITEU8UXTHENWRITEU8UX_BYTE;
 				break;
 
 			case ACTION_WRITEU8XTHENWRITEREADU8UX:
-				cmd[0] = funcToTest[0] =
-				    CMD_WRITEU8UXTHENWRITEREADU8UX_BYTE;
+				cmd[0] = funcToTest[0] = CMD_WRITEU8UXTHENWRITEREADU8UX_BYTE;
 				break;
 
 			case ACTION_GET_FW:
@@ -536,28 +496,26 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 	fw.data = NULL;
 	lim.data = NULL;
 
-	logError(1, "%s Number of Parameters = %d \n", tag, numberParam);
+	logError(1, "%s Number of Parameters = %d\n", tag, numberParam);
 
 	if (numberParam >= 1) {
 		switch (funcToTest[0]) {
 		case CMD_VERSION_BYTE:
-			logError(0, "%s %s: Get Version Byte \n", tag, __func__,
-				 res);
+			logError(0, "%s %s: Get Version Byte\n", tag, __func__, res);
 			byteToRead = 2;
 			mess.dummy = 0;
-			readData =
-			    (u8 *) kmalloc(byteToRead * sizeof(u8), GFP_KERNEL);
+			readData = kmalloc_array(byteToRead, sizeof(u8), GFP_KERNEL);
 			size += byteToRead;
 			if (readData != NULL) {
 				readData[0] = (u8) (FTS_TS_DRV_VER >> 24);
 				readData[1] = (u8) (FTS_TS_DRV_VER >> 16);
 				res = OK;
-				logError(0, "%s %s: Version = %02X%02X \n", tag,
+				logError(0, "%s %s: Version = %02X%02X\n", tag,
 					 __func__, readData[0], readData[1]);
 			} else {
 				res = ERROR_ALLOC;
 				logError(1,
-					 "%s %s: Impossible allocate memory... ERROR %08X \n",
+					 "%s %s: Impossible allocate memory... ERROR %08X\n",
 					 tag, __func__, res);
 			}
 			break;
@@ -565,8 +523,7 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 		case CMD_VERSION:
 			byteToRead = 2 * sizeof(u32);
 			mess.dummy = 0;
-			readData =
-			    (u8 *) kmalloc(byteToRead * sizeof(u8), GFP_KERNEL);
+			readData = kmalloc_array(byteToRead, sizeof(u8), GFP_KERNEL);
 			u32ToU8_be(FTS_TS_DRV_VER, readData);
 			fileSize = 0;
 #ifdef FW_H_FILE
@@ -634,25 +591,23 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 		case CMD_WRITEREAD_BYTE:
 			if (numberParam >= 5) {
 				temp = numberParam - 4;
-				if (cmd[numberParam - 1] == 0) {
+				if (cmd[numberParam - 1] == 0)
 					mess.dummy = 0;
-				} else
+				else
 					mess.dummy = 1;
 
 				u8ToU16_be(&cmd[numberParam - 3], &byteToRead);
-				logError(0, "%s bytesToRead = %d \n", tag,
+				logError(0, "%s bytesToRead = %d\n", tag,
 					 byteToRead + mess.dummy);
 
-				readData =
-				    (u8 *) kmalloc((byteToRead + mess.dummy) *
-						   sizeof(u8), GFP_KERNEL);
-				res =
-				    fts_writeRead_dma_safe(&cmd[1], temp, readData,
-						  byteToRead + mess.dummy);
+				readData = kmalloc_array(byteToRead + mess.dummy,
+							 sizeof(u8), GFP_KERNEL);
+				res = fts_writeRead_dma_safe(&cmd[1], temp, readData,
+							     byteToRead + mess.dummy);
 				size += (byteToRead * sizeof(u8));
 
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
+				logError(1, "%s Wrong number of parameters!\n",
 					 tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
@@ -665,8 +620,7 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 				res = fts_write_dma_safe(&cmd[1], temp);
 
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -676,21 +630,18 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 			if (numberParam >= 3) {
 				if (numberParam == 3
 				    || (numberParam == 4
-					&& cmd[numberParam - 1] == 0)) {
+					&& cmd[numberParam - 1] == 0))
 					mess.dummy = 0;
-				} else
+				else
 					mess.dummy = 1;
 				u8ToU16_be(&cmd[1], &byteToRead);
-				readData =
-				    (u8 *) kmalloc((byteToRead + mess.dummy) *
-						   sizeof(u8), GFP_KERNEL);
-				res =
-				    fts_read_dma_safe(readData, byteToRead + mess.dummy);
+				readData = kmalloc_array(byteToRead + mess.dummy,
+							 sizeof(u8), GFP_KERNEL);
+				res = fts_read_dma_safe(readData, byteToRead + mess.dummy);
 				size += (byteToRead * sizeof(u8));
 
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -699,19 +650,17 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 		case CMD_WRITETHENWRITEREAD_BYTE:
 			if (numberParam >= 6) {
 				u8ToU16_be(&cmd[numberParam - 2], &byteToRead);
-				readData =
-				    (u8 *) kmalloc(byteToRead * sizeof(u8),
-						   GFP_KERNEL);
-				res =
-				    fts_writeThenWriteRead(&cmd[3], cmd[1],
-							   &cmd[3 +
-								(int)cmd[1]],
-							   cmd[2], readData,
-							   byteToRead);
+				readData = kmalloc_array(byteToRead, sizeof(u8),
+							  GFP_KERNEL);
+				res = fts_writeThenWriteRead(&cmd[3], cmd[1],
+							     &cmd[3 +
+								    (int)cmd[1]],
+							     cmd[2], readData,
+							     byteToRead);
 				size += (byteToRead * sizeof(u8));
 
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
+				logError(1, "%s Wrong number of parameters!\n",
 					 tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
@@ -722,22 +671,19 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 			if (numberParam >= 4) {
 				if (cmd[2] <= sizeof(u64)) {
 					u8ToU64_be(&cmd[3], &addr, cmd[2]);
-					logError(0, "%s addr = %016X %ld \n",
+					logError(0, "%s addr = %016X %ld\n",
 						 tag, addr, addr);
-					res =
-					    fts_writeU8UX(cmd[1], cmd[2], addr,
-							  &cmd[3 + cmd[2]],
-							  (numberParam -
-							   cmd[2] - 3));
+					res = fts_writeU8UX(cmd[1], cmd[2], addr,
+							    &cmd[3 + cmd[2]],
+							    (numberParam -
+							     cmd[2] - 3));
 				} else {
-					logError(1, "%s Wrong address size!\n",
-						 tag);
+					logError(1, "%s Wrong address size!\n", tag);
 					res = ERROR_OP_NOT_ALLOW;
 				}
 
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -751,30 +697,25 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 					u8ToU64_be(&cmd[3], &addr, cmd[2]);
 					u8ToU16_be(&cmd[numberParam - 3],
 						   &byteToRead);
-					readData =
-					    (u8 *) kmalloc(byteToRead *
-							   sizeof(u8),
-							   GFP_KERNEL);
+					readData = kmalloc_array(byteToRead,
+								 sizeof(u8),
+								 GFP_KERNEL);
 					logError(0,
-						 "%s addr = %016X byteToRead = %d \n",
+						 "%s addr = %016X byteToRead = %d\n",
 						 tag, addr, byteToRead);
-					res =
-					    fts_writeReadU8UX(cmd[1], cmd[2],
-							      addr, readData,
-							      byteToRead,
-							      cmd[numberParam -
-								  1]);
+					res = fts_writeReadU8UX(cmd[1], cmd[2],
+								addr, readData,
+								byteToRead,
+								cmd[numberParam - 1]);
 					size += (byteToRead * sizeof(u8));
 
 				} else {
-					logError(1, "%s Wrong address size!\n",
-						 tag);
+					logError(1, "%s Wrong address size!\n", tag);
 					res = ERROR_OP_NOT_ALLOW;
 				}
 
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -785,33 +726,25 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 				if ((cmd[2] + cmd[4]) <= sizeof(u64)) {
 					u8ToU64_be(&cmd[5], &addr,
 						   cmd[2] + cmd[4]);
-					logError(0, "%s addr = %016X %ld \n",
+					logError(0, "%s addr = %016X %ld\n",
 						 tag, addr, addr);
-					res =
-					    fts_writeU8UXthenWriteU8UX(cmd[1],
-								       cmd[2],
-								       cmd[3],
-								       cmd[4],
-								       addr,
-								       &cmd[5 +
-									    cmd
-									    [2]
-									    +
-									    cmd
-									    [4]],
-								       (numberParam
-									-
-									cmd[2] -
-									cmd[4] -
-									5));
+					res = fts_writeU8UXthenWriteU8UX(cmd[1],
+									 cmd[2],
+									 cmd[3],
+									 cmd[4],
+									 addr,
+									 &cmd[5 + cmd[2] + cmd[4]],
+									 (numberParam
+									  - cmd[2] -
+									  cmd[4] - 5));
 				} else {
-					logError(1, "%s Wrong address size! \n",
+					logError(1, "%s Wrong address size!\n",
 						 tag);
 					res = ERROR_OP_NOT_ALLOW;
 				}
 
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
+				logError(1, "%s Wrong number of parameters!\n",
 					 tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
@@ -824,41 +757,31 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 					u8ToU64_be(&cmd[5], &addr,
 						   cmd[2] + cmd[4]);
 					logError(1,
-						 "%s %s: cmd[5] = %02X, addr =  %016X \n",
+						 "%s %s: cmd[5] = %02X, addr =  %016X\n",
 						 tag, __func__, cmd[5], addr);
 					u8ToU16_be(&cmd[numberParam - 3],
 						   &byteToRead);
-					readData =
-					    (u8 *) kmalloc(byteToRead *
-							   sizeof(u8),
-							   GFP_KERNEL);
-					res =
-					    fts_writeU8UXthenWriteReadU8UX(cmd
-									   [1],
-									   cmd
-									   [2],
-									   cmd
-									   [3],
-									   cmd
-									   [4],
-									   addr,
-									   readData,
-									   byteToRead,
-									   cmd
-									   [numberParam
-									    -
-									    1]);
+					readData = kmalloc_array(byteToRead,
+								 sizeof(u8),
+								 GFP_KERNEL);
+					res = fts_writeU8UXthenWriteReadU8UX(cmd[1],
+									     cmd[2],
+									     cmd[3],
+									     cmd[4],
+									     addr,
+									     readData,
+									     byteToRead,
+									     cmd[numberParam - 1]);
 					size += (byteToRead * sizeof(u8));
 				} else {
 					logError(1,
-						 "%s Wrong total address size! \n",
+						 "%s Wrong total address size!\n",
 						 tag);
 					res = ERROR_OP_NOT_ALLOW;
 				}
 
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 
@@ -868,11 +791,11 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 			if (numberParam >= 2) {
 				bin_output = cmd[1];
 				logError(0,
-					 "%s Setting Scriptless output mode: %d \n",
+					 "%s Setting Scriptless output mode: %d\n",
 					 tag, bin_output);
 				res = OK;
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
+				logError(1, "%s Wrong number of parameters!\n",
 					 tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
@@ -884,14 +807,12 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 					temp = numberParam - 1;
 					res = fts_writeFwCmd(&cmd[1], temp);
 				} else {
-					logError(1, "%s Wrong parameters! \n",
-						 tag);
+					logError(1, "%s Wrong parameters!\n", tag);
 					res = ERROR_OP_NOT_ALLOW;
 				}
 
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -903,29 +824,24 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 				else
 					res = fts_disableInterrupt();
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
 
 		case CMD_READCONFIG:
 			if (numberParam == 5) {
-				byteToRead =
-				    ((funcToTest[3] << 8) | funcToTest[4]);
-				readData =
-				    (u8 *) kmalloc(byteToRead * sizeof(u8),
-						   GFP_KERNEL);
-				res =
-				    readConfig((u16)
-					       ((((u8) funcToTest[1] & 0x00FF)
-						 << 8) +
-						((u8) funcToTest[2] & 0x00FF)),
-					       readData, byteToRead);
+				byteToRead = ((funcToTest[3] << 8) | funcToTest[4]);
+				readData = kmalloc_array(byteToRead, sizeof(u8),
+							 GFP_KERNEL);
+				res = readConfig((u16)
+						 ((((u8) funcToTest[1] & 0x00FF)
+						   << 8) +
+						  ((u8) funcToTest[2] & 0x00FF)),
+						 readData, byteToRead);
 				size += (byteToRead * sizeof(u8));
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -934,59 +850,52 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 			if (numberParam >= 5) {
 				temp = (int)funcToTest[1];
 				if (numberParam == 5 + (temp - 1) && temp != 0) {
-					readData =
-					    (u8 *) kmalloc(FIFO_EVENT_SIZE *
-							   sizeof(u8),
-							   GFP_KERNEL);
-					res =
-					    pollForEvent((int *)&funcToTest[2],
-							 temp, readData,
-							 ((funcToTest[temp + 2]
-							   & 0x00FF) << 8) +
-							 (funcToTest[temp + 3] &
-							  0x00FF));
+					readData = kmalloc_array(FIFO_EVENT_SIZE,
+								 sizeof(u8),
+								 GFP_KERNEL);
+					res = pollForEvent((int *)&funcToTest[2],
+							   temp, readData,
+							   ((funcToTest[temp + 2]
+							     & 0x00FF) << 8) +
+							   (funcToTest[temp + 3] &
+							    0x00FF));
 					if (res >= OK)
 						res = OK;
 					size += (FIFO_EVENT_SIZE * sizeof(u8));
 					byteToRead = FIFO_EVENT_SIZE;
 				} else {
-					logError(1, "%s Wrong parameters! \n",
+					logError(1, "%s Wrong parameters!\n",
 						 tag);
 					res = ERROR_OP_NOT_ALLOW;
 				}
 
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
 
 		case CMD_SYSTEMRESET:
 			res = fts_system_reset();
-
 			break;
 
 		case CMD_READSYSINFO:
-			if (numberParam == 2) {
+			if (numberParam == 2)
 				res = readSysInfo(funcToTest[1]);
-			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+			else {
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 
 			break;
 
 		case CMD_CLEANUP:
-			if (numberParam == 2) {
+			if (numberParam == 2)
 				res = cleanUp(funcToTest[1]);
-			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+			else {
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
-
 			break;
 
 		case CMD_GETFORCELEN:
@@ -1011,17 +920,16 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 
 		case CMD_GETMSFRAME:
 			if (numberParam == 2) {
-				logError(0, "%s Get 1 MS Frame \n", tag);
+				logError(0, "%s Get 1 MS Frame\n", tag);
 				setScanMode(SCAN_MODE_ACTIVE, 0x01);
 				mdelay(WAIT_FOR_FRESH_FRAMES);
 				setScanMode(SCAN_MODE_ACTIVE, 0x00);
 				mdelay(WAIT_AFTER_SENSEOFF);
 				flushFIFO();
-				res =
-				    getMSFrame3((MSFrameType) cmd[1], &frameMS);
+				res = getMSFrame3((MSFrameType) cmd[1], &frameMS);
 				if (res < 0) {
 					logError(0,
-						 "%s Error while taking the MS frame... ERROR %08X \n",
+						 "%s Error while taking the MS frame... ERROR %08X\n",
 						 tag, res);
 
 				} else {
@@ -1030,43 +938,37 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 						 tag, res);
 					size += (res * sizeof(short) + 2);
 					/* set res to OK because if getMSFrame is
-					   successful res = number of words read
+					 * successful res = number of words read
 					 */
 					res = OK;
 					print_frame_short("MS frame =",
 							  array1dTo2d_short
 							  (frameMS.node_data,
-							   frameMS.
-							   node_data_size,
-							   frameMS.header.
-							   sense_node),
-							  frameMS.header.
-							  force_node,
-							  frameMS.header.
-							  sense_node);
+							   frameMS.node_data_size,
+							   frameMS.header.sense_node),
+							  frameMS.header.force_node,
+							  frameMS.header.sense_node);
 				}
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
 
-			/*read self raw */
+		/*read self raw */
 		case CMD_GETSSFRAME:
 			if (numberParam == 2) {
-				logError(0, "%s Get 1 SS Frame \n", tag);
+				logError(0, "%s Get 1 SS Frame\n", tag);
 				flushFIFO();
 				setScanMode(SCAN_MODE_ACTIVE, 0x01);
 				mdelay(WAIT_FOR_FRESH_FRAMES);
 				setScanMode(SCAN_MODE_ACTIVE, 0x00);
 				mdelay(WAIT_AFTER_SENSEOFF);
-				res =
-				    getSSFrame3((SSFrameType) cmd[1], &frameSS);
+				res = getSSFrame3((SSFrameType) cmd[1], &frameSS);
 
 				if (res < OK) {
 					logError(0,
-						 "%s Error while taking the SS frame... ERROR %08X \n",
+						 "%s Error while taking the SS frame... ERROR %08X\n",
 						 tag, res);
 
 				} else {
@@ -1075,29 +977,23 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 						 tag, res);
 					size += (res * sizeof(short) + 2);
 					/* set res to OK because if getMSFrame is
-					   successful res = number of words read
+					 * successful res = number of words read
 					 */
 					res = OK;
 					print_frame_short("SS force frame =",
 							  array1dTo2d_short
 							  (frameSS.force_data,
-							   frameSS.header.
-							   force_node, 1),
-							  frameSS.header.
-							  force_node, 1);
+							   frameSS.header.force_node, 1),
+							  frameSS.header.force_node, 1);
 					print_frame_short("SS sense frame =",
 							  array1dTo2d_short
 							  (frameSS.sense_data,
-							   frameSS.header.
-							   sense_node,
-							   frameSS.header.
-							   sense_node), 1,
-							  frameSS.header.
-							  sense_node);
+							   frameSS.header.sense_node,
+							   frameSS.header.sense_node), 1,
+							  frameSS.header.sense_node);
 				}
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -1105,22 +1001,21 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 		case CMD_REQCOMPDATA:
 			if (numberParam == 2) {
 				logError(0,
-					 "%s Requesting Compensation Data \n",
+					 "%s Requesting Compensation Data\n",
 					 tag);
 				res = requestCompensationData(cmd[1]);
 
 				if (res < OK) {
 					logError(0,
-						 "%s Error requesting compensation data ERROR %08X \n",
+						 "%s Error requesting compensation data ERROR %08X\n",
 						 tag, res);
 				} else {
 					logError(0,
-						 "%s Requesting Compensation Data Finished! \n",
+						 "%s Requesting Compensation Data Finished!\n",
 						 tag);
 				}
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -1128,151 +1023,100 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 		case CMD_READCOMPDATAHEAD:
 			if (numberParam == 2) {
 				logError(0,
-					 "%s Requesting Compensation Data \n",
-					 tag);
+					 "%s Requesting Compensation Data\n", tag);
 				res = requestCompensationData(cmd[1]);
 				if (res < OK) {
 					logError(0,
-						 "%s Error requesting compensation data ERROR %08X \n",
-						 tag, res);
+						 "%s Error requesting compensation data ERROR %08X\n", tag, res);
 				} else {
 					logError(0,
-						 "%s Requesting Compensation Data Finished! \n",
-						 tag);
-					res =
-					    readCompensationDataHeader((u8)
-								       funcToTest
-								       [1],
-								       &dataHead,
-								       &address);
+						 "%s Requesting Compensation Data Finished!\n", tag);
+					res = readCompensationDataHeader((u8)funcToTest
+									 [1],
+									 &dataHead,
+									 &address);
 					if (res < OK) {
 						logError(0,
-							 "%s Read Compensation Data Header ERROR %08X\n",
-							 tag, res);
+							 "%s Read Compensation Data Header ERROR %08X\n", tag, res);
 					} else {
 						logError(0,
-							 "%s Read Compensation Data Header OK!\n",
-							 tag);
+							 "%s Read Compensation Data Header OK!\n", tag);
 						size += (1 * sizeof(u8));
 					}
 				}
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
 
 		case CMD_READMSCOMPDATA:
 			if (numberParam == 2) {
-				logError(0, "%s Get MS Compensation Data \n",
-					 tag);
-				res =
-				    readMutualSenseCompensationData(cmd[1],
-								    &compData);
+				logError(0, "%s Get MS Compensation Data\n", tag);
+				res = readMutualSenseCompensationData(cmd[1],
+								      &compData);
 
 				if (res < OK) {
 					logError(0,
-						 "%s Error reading MS compensation data ERROR %08X \n",
-						 tag, res);
+						 "%s Error reading MS compensation data ERROR %08X\n", tag, res);
 				} else {
 					logError(0,
-						 "%s MS Compensation Data Reading Finished! \n",
-						 tag);
-					size =
-					    ((compData.node_data_size +
-					      10) * sizeof(i8));
+						 "%s MS Compensation Data Reading Finished!\n", tag);
+					size = ((compData.node_data_size +
+						 10) * sizeof(i8));
 					print_frame_i8("MS Data (Cx2) =",
-						       array1dTo2d_i8(compData.
-								      node_data,
-								      compData.
-								      node_data_size,
-								      compData.
-								      header.
-								      sense_node),
-						       compData.header.
-						       force_node,
-						       compData.header.
-						       sense_node);
+						       array1dTo2d_i8(compData.node_data,
+								      compData.node_data_size,
+								      compData.header.sense_node),
+						       compData.header.force_node,
+						       compData.header.sense_node);
 				}
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
 
 		case CMD_READSSCOMPDATA:
 			if (numberParam == 2) {
-				logError(0, "%s Get SS Compensation Data... \n",
-					 tag);
-				res =
-				    readSelfSenseCompensationData(cmd[1],
-								  &comData);
+				logError(0, "%s Get SS Compensation Data...\n", tag);
+				res = readSelfSenseCompensationData(cmd[1], &comData);
 				if (res < OK) {
 					logError(0,
-						 "%s Error reading SS compensation data ERROR %08X\n",
-						 tag, res);
+						 "%s Error reading SS compensation data ERROR %08X\n", tag, res);
 				} else {
 					logError(0,
-						 "%s SS Compensation Data Reading Finished! \n",
-						 tag);
-					size =
-					    ((comData.header.force_node +
-					      comData.header.sense_node) * 2 +
-					     13) * sizeof(i8);
+						 "%s SS Compensation Data Reading Finished!\n", tag);
+					size = ((comData.header.force_node +
+						 comData.header.sense_node) * 2 +
+						13) * sizeof(i8);
 					print_frame_i8("SS Data Ix2_fm = ",
-						       array1dTo2d_i8(comData.
-								      ix2_fm,
-								      comData.
-								      header.
-								      force_node,
-								      comData.
-								      header.
-								      force_node),
+						       array1dTo2d_i8(comData.ix2_fm,
+								      comData.header.force_node,
+								      comData.header.force_node),
 						       1,
-						       comData.header.
-						       force_node);
+						       comData.header.force_node);
 					print_frame_i8("SS Data Cx2_fm = ",
-						       array1dTo2d_i8(comData.
-								      cx2_fm,
-								      comData.
-								      header.
-								      force_node,
-								      comData.
-								      header.
-								      force_node),
+						       array1dTo2d_i8(comData.cx2_fm,
+								      comData.header.force_node,
+								      comData.header.force_node),
 						       1,
-						       comData.header.
-						       force_node);
+						       comData.header.force_node);
 					print_frame_i8("SS Data Ix2_sn = ",
-						       array1dTo2d_i8(comData.
-								      ix2_sn,
-								      comData.
-								      header.
-								      sense_node,
-								      comData.
-								      header.
-								      sense_node),
+						       array1dTo2d_i8(comData.ix2_sn,
+								      comData.header.sense_node,
+								      comData.header.sense_node),
 						       1,
-						       comData.header.
-						       sense_node);
+						       comData.header.sense_node);
 					print_frame_i8("SS Data Cx2_sn = ",
-						       array1dTo2d_i8(comData.
-								      cx2_sn,
-								      comData.
-								      header.
-								      sense_node,
-								      comData.
-								      header.
-								      sense_node),
+						       array1dTo2d_i8(comData.cx2_sn,
+								      comData.header.sense_node,
+								      comData.header.sense_node),
 						       1,
-						       comData.header.
-						       sense_node);
+						       comData.header.sense_node);
 				}
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -1280,39 +1124,28 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 		case CMD_READTOTMSCOMPDATA:
 			if (numberParam == 2) {
 				logError(0,
-					 "%s Get TOT MS Compensation Data \n",
-					 tag);
-				res =
-				    readTotMutualSenseCompensationData(cmd[1],
-								       &totCompData);
+					 "%s Get TOT MS Compensation Data\n", tag);
+				res = readTotMutualSenseCompensationData(cmd[1],
+						&totCompData);
 
 				if (res < OK) {
 					logError(0,
-						 "%s Error reading TOT MS compensation data ERROR %08X \n",
-						 tag, res);
+						 "%s Error reading TOT MS compensation data ERROR %08X\n", tag, res);
 				} else {
 					logError(0,
-						 "%s TOT MS Compensation Data Reading Finished! \n",
-						 tag);
-					size =
-					    (totCompData.node_data_size *
-					     sizeof(short) + 9);
+						 "%s TOT MS Compensation Data Reading Finished!\n", tag);
+					size = (totCompData.node_data_size *
+						sizeof(short) + 9);
 					print_frame_short("MS Data (TOT Cx) =",
 							  array1dTo2d_short
-							  (totCompData.
-							   node_data,
-							   totCompData.
-							   node_data_size,
-							   totCompData.header.
-							   sense_node),
-							  totCompData.header.
-							  force_node,
-							  totCompData.header.
-							  sense_node);
+							  (totCompData.node_data,
+							   totCompData.node_data_size,
+							   totCompData.header.sense_node),
+							  totCompData.header.force_node,
+							  totCompData.header.sense_node);
 				}
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -1320,114 +1153,71 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 		case CMD_READTOTSSCOMPDATA:
 			if (numberParam == 2) {
 				logError(0,
-					 "%s Get TOT SS Compensation Data... \n",
-					 tag);
-				res =
-				    readTotSelfSenseCompensationData(cmd[1],
-								     &totComData);
+					 "%s Get TOT SS Compensation Data...\n", tag);
+				res = readTotSelfSenseCompensationData(cmd[1], &totComData);
 				if (res < OK) {
 					logError(0,
-						 "%s Error reading TOT SS compensation data ERROR %08X\n",
-						 tag, res);
+						 "%s Error reading TOT SS compensation data ERROR %08X\n", tag, res);
 				} else {
 					logError(0,
-						 "%s TOT SS Compensation Data Reading Finished! \n",
-						 tag);
-					size =
-					    ((totComData.header.force_node +
-					      totComData.header.sense_node) *
-					     2 * sizeof(short) + 9);
+						 "%s TOT SS Compensation Data Reading Finished!\n", tag);
+					size = ((totComData.header.force_node +
+						 totComData.header.sense_node) *
+						2 * sizeof(short) + 9);
 					print_frame_u16("SS Data TOT Ix_fm = ",
 							array1dTo2d_u16
 							(totComData.ix_fm,
-							 totComData.header.
-							 force_node,
-							 totComData.header.
-							 force_node), 1,
-							totComData.header.
-							force_node);
+							 totComData.header.force_node,
+							 totComData.header.force_node), 1,
+							totComData.header.force_node);
 					print_frame_short
-					    ("SS Data TOT Cx_fm = ",
-					     array1dTo2d_short(totComData.cx_fm,
-							       totComData.
-							       header.
-							       force_node,
-							       totComData.
-							       header.
-							       force_node), 1,
-					     totComData.header.force_node);
+					("SS Data TOT Cx_fm = ",
+					 array1dTo2d_short(totComData.cx_fm,
+							   totComData.header.force_node,
+							   totComData.header.force_node), 1,
+					 totComData.header.force_node);
 					print_frame_u16("SS Data TOT Ix_sn = ",
 							array1dTo2d_u16
 							(totComData.ix_sn,
-							 totComData.header.
-							 sense_node,
-							 totComData.header.
-							 sense_node), 1,
-							totComData.header.
-							sense_node);
+							 totComData.header.sense_node,
+							 totComData.header.sense_node), 1,
+							totComData.header.sense_node);
 					print_frame_short
-					    ("SS Data TOT Cx_sn = ",
-					     array1dTo2d_short(totComData.cx_sn,
-							       totComData.
-							       header.
-							       sense_node,
-							       totComData.
-							       header.
-							       sense_node), 1,
-					     totComData.header.sense_node);
+					("SS Data TOT Cx_sn = ",
+					 array1dTo2d_short(totComData.cx_sn,
+							   totComData.header.sense_node,
+							   totComData.header.sense_node), 1,
+					 totComData.header.sense_node);
 				}
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
-#if 0
-		case CMD_GETFWVER:
-			res = getFirmwareVersion(&fw_version, &config_id);
-			if (res < OK) {
-				logError(1,
-					 "%s Error reading firmware version and config id ERROR %02X\n",
-					 tag, res);
-			} else {
-				logError(0,
-					 "%s getFirmwareVersion Finished! \n",
-					 tag);
-				size += (4) * sizeof(u8);
-			}
-			break;
-#endif
 
 		case CMD_FLASHUNLOCK:
 			res = flash_unlock();
-			if (res < OK) {
-				logError(1,
-					 "%s Impossible Unlock Flash ERROR %08X\n",
-					 tag, res);
-			} else {
+			if (res < OK)
+				logError(1, "%s Impossible Unlock Flash ERROR %08X\n", tag, res);
+			else
 				logError(0, "%s Flash Unlock OK!\n", tag);
-			}
 			break;
 
 		case CMD_READFWFILE:
 			if (numberParam == 2) {
-				logError(0, "%s Reading FW File... \n", tag);
-				res =
-				    readFwFile(PATH_FILE_FW, &fw,
-					       funcToTest[1]);
+				logError(0, "%s Reading FW File...\n", tag);
+				res = readFwFile(PATH_FILE_FW, &fw,
+						 funcToTest[1]);
 				if (res < OK) {
 					logError(0,
-						 "%s Error reading FW File ERROR %08X\n",
-						 tag, res);
+						 "%s Error reading FW File ERROR %08X\n", tag, res);
 				} else {
 					logError(0,
-						 "%s Read FW File Finished! \n",
-						 tag);
+						 "%s Read FW File Finished!\n", tag);
 				}
 				kfree(fw.data);
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -1435,23 +1225,17 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 		case CMD_FLASHPROCEDURE:
 			if (numberParam == 3) {
 				logError(0,
-					 "%s Starting Flashing Procedure... \n",
-					 tag);
-				res =
-				    flashProcedure(PATH_FILE_FW, cmd[1],
-						   cmd[2]);
+					 "%s Starting Flashing Procedure...\n", tag);
+				res = flashProcedure(PATH_FILE_FW, cmd[1], cmd[2]);
 				if (res < OK) {
 					logError(0,
-						 "%s Error during flash procedure ERROR %08X\n",
-						 tag, res);
+						 "%s Error during flash procedure ERROR %08X\n", tag, res);
 				} else {
 					logError(0,
-						 "%s Flash Procedure Finished! \n",
-						 tag);
+						 "%s Flash Procedure Finished!\n", tag);
 				}
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -1460,12 +1244,10 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 			res = flash_erase_unlock();
 			if (res < OK) {
 				logError(0,
-					 "%s Error during flash erase unlock... ERROR %08X\n",
-					 tag, res);
+					 "%s Error during flash erase unlock... ERROR %08X\n", tag, res);
 			} else {
 				logError(0,
-					 "%s Flash Erase Unlock Finished! \n",
-					 tag);
+					 "%s Flash Erase Unlock Finished!\n", tag);
 			}
 			break;
 
@@ -1476,107 +1258,88 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 						 funcToTest[1]);
 				if (res < OK)
 					logError(1,
-						 "%s Error reading FW File ERROR %08X\n",
-						 tag, res);
+						 "%s Error reading FW File ERROR %08X\n", tag, res);
 				else
 					logError(1,
-						 "%s Read FW File Finished!\n",
-						 tag);
+						 "%s Read FW File Finished!\n", tag);
 				logError(1,
-					 "%s Starting Flashing Page Erase... \n",
-					 tag);
+					 "%s Starting Flashing Page Erase...\n", tag);
 				res = flash_erase_page_by_page(cmd[1], &fw);
 				if (res < OK)
 					logError(1,
-						 "%s Error during flash page erase... ERROR %08X\n",
-						 tag, res);
+						 "%s Error during flash page erase... ERROR %08X\n", tag, res);
 				else
 					logError(1,
-						 "%s Flash Page Erase Finished! \n",
-						 tag);
+						 "%s Flash Page Erase Finished!\n", tag);
 				kfree(fw.data);
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
 
 
-			/*ITO TEST */
+		/*ITO TEST */
 		case CMD_ITOTEST:
 			res = production_test_ito(limit_file_name, &tests);
 			break;
 
-			/*Initialization */
+		/*Initialization */
 		case CMD_INITTEST:
-			if (numberParam == 2) {
+			if (numberParam == 2)
 				res = production_test_initialization(cmd[1]);
 
-			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+			else {
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
 
 		case CMD_MSRAWTEST:
 			if (numberParam == 2)
-				res =
-				    production_test_ms_raw(limit_file_name, cmd[1],
-							   &tests);
+				res = production_test_ms_raw(limit_file_name, cmd[1],
+							     &tests);
 			else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
 
 		case CMD_MSINITDATATEST:
 			if (numberParam == 2)
-				res =
-				    production_test_ms_cx(limit_file_name, cmd[1],
-							  &tests);
+				res = production_test_ms_cx(limit_file_name, cmd[1], &tests);
 			else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
 
 		case CMD_SSRAWTEST:
 			if (numberParam == 2)
-				res =
-				    production_test_ss_raw(limit_file_name, cmd[1],
-							   &tests);
+				res = production_test_ss_raw(limit_file_name, cmd[1],
+							     &tests);
 			else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
 
 		case CMD_SSINITDATATEST:
 			if (numberParam == 2)
-				res =
-				    production_test_ss_ix_cx(limit_file_name,
-							     cmd[1], &tests);
+				res = production_test_ss_ix_cx(limit_file_name,
+							       cmd[1], &tests);
 			else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
 
-			/*PRODUCTION TEST */
+		/*PRODUCTION TEST */
 		case CMD_MAINTEST:
 			if (numberParam == 3)
-				res =
-				    production_test_main(limit_file_name, cmd[1],
-							 cmd[2], &tests);
+				res = production_test_main(limit_file_name, cmd[1], cmd[2], &tests);
 			else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -1603,8 +1366,7 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 				if (byte_call == 1)
 					size += sizeof(u32);
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -1624,7 +1386,7 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 
 				if (fileSize > addr) {
 					logError(1,
-						 "%s Limits dimension expected by Host is less than actual size: expected = %d, real = %d \n",
+						 "%s Limits dimension expected by Host is less than actual size: expected = %d, real = %d\n",
 						 tag, byteToRead, fileSize);
 					res = ERROR_OP_NOT_ALLOW;
 				}
@@ -1632,8 +1394,7 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 				size += (addr * sizeof(u8));
 
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -1642,20 +1403,17 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 			if (numberParam >= 1) {
 
 				if (numberParam == 1)
-					res =
-					    getFWdata(PATH_FILE_FW, &readData,
-						      &fileSize);
+					res = getFWdata(PATH_FILE_FW, &readData,
+							&fileSize);
 				else
-					res =
-					    getFWdata(path, &readData,
-						      &fileSize);
+					res = getFWdata(path, &readData,
+							&fileSize);
 
 				size += (fileSize * sizeof(u8));
 				if (byte_call == 1)
 					size += sizeof(u32);
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
@@ -1666,59 +1424,51 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 				u8ToU16_be(&cmd[1], &byteToRead);
 				addr = ((u64) byteToRead) * 4;
 
-				res =
-				    getFWdata(PATH_FILE_FW, &readData,
-					      &fileSize);
+				res = getFWdata(PATH_FILE_FW, &readData,
+						&fileSize);
 				if (fileSize > addr) {
 					logError(1,
-						 "%s FW dimension expected by Host is less than actual size: expected = %d, real = %d \n",
+						 "%s FW dimension expected by Host is less than actual size: expected = %d, real = %d\n",
 						 tag, byteToRead, fileSize);
 					res = ERROR_OP_NOT_ALLOW;
 				}
-
 				size += (addr * sizeof(u8));
-
 			} else {
-				logError(1, "%s Wrong number of parameters! \n",
-					 tag);
+				logError(1, "%s Wrong number of parameters!\n", tag);
 				res = ERROR_OP_NOT_ALLOW;
 			}
 			break;
-/*
-* finish all the diagnostic command with a goto ERROR in order to skip the modification on driver_test_buff
-* remember to set properly the limit and printed variables in order to make the seq_file logic to work
-*/
+		/*
+		 * finish all the diagnostic command with a goto ERROR in order to skip the modification on driver_test_buff
+		 * remember to set properly the limit and printed variables in order to make the seq_file logic to work
+		 */
 		case CMD_DIAGNOSTIC:
 			index = 0;
 			size = 0;
 			fileSize = 256 * 1024 * sizeof(char);
-			driver_test_buff = (u8 *) kzalloc(fileSize, GFP_KERNEL);
-			readData =
-			    (u8 *)
-			    kmalloc((ERROR_DUMP_ROW_SIZE *
-				     ERROR_DUMP_COL_SIZE) * sizeof(u8),
-				    GFP_KERNEL);
+			driver_test_buff = kzalloc(fileSize, GFP_KERNEL);
+			readData = (u8 *)
+				   kmalloc((ERROR_DUMP_ROW_SIZE *
+					    ERROR_DUMP_COL_SIZE) * sizeof(u8),
+					   GFP_KERNEL);
 			if (driver_test_buff == NULL || readData == NULL) {
 				res = ERROR_ALLOC;
 				logError(1,
-					 "%s Impossible allocate memory for buffers! ERROR %08X! \n",
-					 tag, res);
+					 "%s Impossible allocate memory for buffers! ERROR %08X!\n", tag, res);
 				goto END;
 			}
 			j = snprintf(&driver_test_buff[index], fileSize - index,
 				     "DIAGNOSTIC TEST:\n1) I2C Test: ");
 			index += j;
 
-			res =
-			    fts_writeReadU8UX(FTS_CMD_HW_REG_R,
-					      ADDR_SIZE_HW_REG, ADDR_DCHIP_ID,
-					      (u8 *)&temp, 2, DUMMY_HW_REG);
+			res = fts_writeReadU8UX(FTS_CMD_HW_REG_R,
+						ADDR_SIZE_HW_REG, ADDR_DCHIP_ID,
+						(u8 *)&temp, 2, DUMMY_HW_REG);
 			if (res < OK) {
 				logError(1,
-					 "%s Error during I2C test: ERROR %08X! \n",
-					 tag, res);
+					 "%s Error during I2C test: ERROR %08X!\n", tag, res);
 				j = snprintf(&driver_test_buff[index],
-					     fileSize - index, "ERROR %08X \n",
+					     fileSize - index, "ERROR %08X\n",
 					     res);
 				index += j;
 				res = ERROR_OP_NOT_ALLOW;
@@ -1726,28 +1476,27 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 			}
 
 			temp &= 0xFFFF;
-			logError(1, "%s Chip ID = %04X! \n", tag, temp);
+			logError(1, "%s Chip ID = %04X!\n", tag, temp);
 			j = snprintf(&driver_test_buff[index], fileSize - index,
-				     "DATA = %04X, expected = %02X%02X \n",
+				     "DATA = %04X, expected = %02X%02X\n",
 				     temp, DCHIP_ID_1, DCHIP_ID_0);
 			index += j;
 			if (temp != ((DCHIP_ID_1 << 8) | DCHIP_ID_0)) {
 				logError(1,
-					 "%s Wrong CHIP ID, Diagnostic failed! \n",
-					 tag, res);
+					 "%s Wrong CHIP ID, Diagnostic failed!\n", tag, res);
 				res = ERROR_OP_NOT_ALLOW;
 				goto END_DIAGNOSTIC;
 			}
 
 			j = snprintf(&driver_test_buff[index], fileSize - index,
-				     "Present Driver Mode: %08X \n",
+				     "Present Driver Mode: %08X\n",
 				     info->mode);
 			index += j;
 
 			j = snprintf(&driver_test_buff[index], fileSize - index,
 				     "2) FW running: Sensing On...");
 			index += j;
-			logError(1, "%s Sensing On! \n", tag, temp);
+			logError(1, "%s Sensing On!\n", tag, temp);
 			readData[0] = FTS_CMD_SCAN_MODE;
 			readData[1] = SCAN_MODE_ACTIVE;
 			readData[2] = 0x1;
@@ -1755,8 +1504,7 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 			res = checkEcho(readData, 3);
 			if (res < OK) {
 				logError(1,
-					 "%s No Echo received.. ERROR %08X !\n",
-					 tag, res);
+					 "%s No Echo received.. ERROR %08X !\n", tag, res);
 				j = snprintf(&driver_test_buff[index],
 					     fileSize - index,
 					     "No echo found... ERROR %08X!\n",
@@ -1771,9 +1519,9 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 				index += j;
 			}
 
-			logError(1, "%s Reading Frames...! \n", tag, temp);
+			logError(1, "%s Reading Frames...!\n", tag, temp);
 			j = snprintf(&driver_test_buff[index], fileSize - index,
-				     "3) Read Frames: \n");
+				     "3) Read Frames:\n");
 			index += j;
 			for (temp = 0; temp < DIAGNOSTIC_NUM_FRAME; temp++) {
 				logError(1, "%s Iteration n. %d...\n", tag,
@@ -1790,9 +1538,8 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 							     fileSize - index,
 							     "MS RAW FRAME =");
 						index += j;
-						res |=
-						    getMSFrame3(MS_RAW,
-								&frameMS);
+						res |= getMSFrame3(MS_RAW,
+								   &frameMS);
 						break;
 					case 2:
 						j = snprintf(&driver_test_buff
@@ -1800,9 +1547,8 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 							     fileSize - index,
 							     "MS STRENGTH FRAME =");
 						index += j;
-						res |=
-						    getMSFrame3(MS_STRENGTH,
-								&frameMS);
+						res |= getMSFrame3(MS_STRENGTH,
+								   &frameMS);
 						break;
 					case 1:
 						j = snprintf(&driver_test_buff
@@ -1810,16 +1556,15 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 							     fileSize - index,
 							     "MS BASELINE FRAME =");
 						index += j;
-						res |=
-						    getMSFrame3(MS_BASELINE,
-								&frameMS);
+						res |= getMSFrame3(MS_BASELINE,
+								   &frameMS);
 						break;
 					}
 					if (res < OK) {
 						j = snprintf(&driver_test_buff
 							     [index],
 							     fileSize - index,
-							     "No data! ERROR %08X \n",
+							     "No data! ERROR %08X\n",
 							     res);
 						index += j;
 					} else {
@@ -1828,8 +1573,7 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 						     frameMS.node_data_size;
 						     address++) {
 							if (address %
-							    frameMS.header.
-							    sense_node == 0) {
+							    frameMS.header.sense_node == 0) {
 								j = snprintf
 								    (&driver_test_buff
 								     [index],
@@ -1843,8 +1587,7 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 							     [index],
 							     fileSize - index,
 							     "%5d, ",
-							     frameMS.
-							     node_data
+							     frameMS.node_data
 							     [address]);
 							index += j;
 						}
@@ -1863,38 +1606,35 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 						j = snprintf(&driver_test_buff
 							     [index],
 							     fileSize - index,
-							     "SS RAW FRAME = \n");
+							     "SS RAW FRAME =\n");
 						index += j;
-						res |=
-						    getSSFrame3(SS_RAW,
-								&frameSS);
+						res |= getSSFrame3(SS_RAW,
+								   &frameSS);
 						break;
 					case 2:
 						j = snprintf(&driver_test_buff
 							     [index],
 							     fileSize - index,
-							     "SS STRENGTH FRAME = \n");
+							     "SS STRENGTH FRAME =\n");
 						index += j;
-						res |=
-						    getSSFrame3(SS_STRENGTH,
-								&frameSS);
+						res |= getSSFrame3(SS_STRENGTH,
+								   &frameSS);
 						break;
 					case 1:
 						j = snprintf(&driver_test_buff
 							     [index],
 							     fileSize - index,
-							     "SS BASELINE FRAME = \n");
+							     "SS BASELINE FRAME =\n");
 						index += j;
-						res |=
-						    getSSFrame3(SS_BASELINE,
-								&frameSS);
+						res |= getSSFrame3(SS_BASELINE,
+								   &frameSS);
 						break;
 					}
 					if (res < OK) {
 						j = snprintf(&driver_test_buff
 							     [index],
 							     fileSize - index,
-							     "No data! ERROR %08X \n",
+							     "No data! ERROR %08X\n",
 							     res);
 						index += j;
 					} else {
@@ -1907,8 +1647,7 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 							     [index],
 							     fileSize - index,
 							     "%d\n",
-							     frameSS.
-							     force_data
+							     frameSS.force_data
 							     [address]);
 
 							index += j;
@@ -1922,8 +1661,7 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 							     [index],
 							     fileSize - index,
 							     "%d, ",
-							     frameSS.
-							     sense_data
+							     frameSS.sense_data
 							     [address]);
 
 							index += j;
@@ -1941,24 +1679,22 @@ static ssize_t fts_driver_test_write(struct file *file, const char __user *buf,
 				}
 			}
 
-			logError(1, "%s Reading error info... \n", tag, temp);
+			logError(1, "%s Reading error info...\n", tag, temp);
 			j = snprintf(&driver_test_buff[index], fileSize - index,
 				     "4) FW INFO DUMP: ");
 			index += j;
 			temp = dumpErrorInfo(readData, ERROR_DUMP_ROW_SIZE * ERROR_DUMP_COL_SIZE);
 			if (temp < OK) {
 				logError(1,
-					 "%s Error during dump: ERROR %08X! \n",
-					 tag, res);
+					 "%s Error during dump: ERROR %08X!\n", tag, res);
 				j = snprintf(&driver_test_buff[index],
-					     fileSize - index, "ERROR %08X \n",
+					     fileSize - index, "ERROR %08X\n",
 					     temp);
 				index += j;
 			} else {
-				logError(1, "%s DUMP OK! \n", tag, res);
+				logError(1, "%s DUMP OK!\n", tag, res);
 				for (temp = 0;
-				     temp <
-				     ERROR_DUMP_ROW_SIZE * ERROR_DUMP_COL_SIZE;
+				     temp < ERROR_DUMP_ROW_SIZE * ERROR_DUMP_COL_SIZE;
 				     temp++) {
 					if (temp % ERROR_DUMP_COL_SIZE == 0) {
 						j = snprintf(&driver_test_buff
@@ -1981,12 +1717,12 @@ END_DIAGNOSTIC:
 			if (res < OK) {
 				j = snprintf(&driver_test_buff[index],
 					     fileSize - index,
-					     "\nRESULT = FAIL \n");
+					     "\nRESULT = FAIL\n");
 				index += j;
 			} else {
 				j = snprintf(&driver_test_buff[index],
 					     fileSize - index,
-					     "\nRESULT = FINISHED \n");
+					     "\nRESULT = FINISHED\n");
 				index += j;
 			}
 			limit = index;
@@ -2000,15 +1736,14 @@ END_DIAGNOSTIC:
 #endif
 
 		default:
-			logError(1, "%s COMMAND ID NOT VALID!!! \n", tag);
+			logError(1, "%s COMMAND ID NOT VALID!!!\n", tag);
 			res = ERROR_OP_NOT_ALLOW;
 			break;
 		}
 
 	} else {
 		logError(1,
-			 "%s NO COMMAND SPECIFIED!!! do: 'echo [cmd_code] [args] > stm_fts_cmd' before looking for result!\n",
-			 tag);
+			 "%s NO COMMAND SPECIFIED!!! do: 'echo [cmd_code] [args] > stm_fts_cmd' before looking for result!\n", tag);
 		res = ERROR_OP_NOT_ALLOW;
 
 	}
@@ -2028,17 +1763,17 @@ END:
 		if (bin_output != 1) {
 			size *= 2;
 			size -= 1;
-		} else
+		} else {
 			size += 1;
+		}
 	}
 
 	logError(0, "%s Size = %d\n", tag, size);
-	driver_test_buff = (u8 *) kzalloc(size, GFP_KERNEL);
-	logError(0, "%s Finish to allocate memory! \n", tag);
+	driver_test_buff = kzalloc(size, GFP_KERNEL);
+	logError(0, "%s Finish to allocate memory!\n", tag);
 	if (driver_test_buff == NULL) {
 		logError(0,
-			 "%s Unable to allocate driver_test_buff! ERROR %08X\n",
-			 tag, ERROR_ALLOC);
+			 "%s Unable to allocate driver_test_buff! ERROR %08X\n", tag, ERROR_ALLOC);
 		goto ERROR;
 	}
 
@@ -2071,13 +1806,13 @@ END:
 				break;
 			case CMD_GETFWFILE:
 			case CMD_GETLIMITSFILE:
-				logError(0, "%s Start To parse! \n", tag);
+				logError(0, "%s Start To parse!\n", tag);
 				for (j = 0; j < fileSize; j++) {
 					snprintf(&driver_test_buff[index], 3,
 						 "%02X", readData[j]);
 					index += 2;
 				}
-				logError(0, "%s Finish to parse! \n", tag);
+				logError(0, "%s Finish to parse!\n", tag);
 				break;
 			case CMD_GETFORCELEN:
 			case CMD_GETSENSELEN:
@@ -2099,8 +1834,7 @@ END:
 				for (j = 0; j < frameMS.node_data_size; j++) {
 					snprintf(&driver_test_buff[index], 5,
 						 "%02X%02X",
-						 (frameMS.
-						  node_data[j] & 0xFF00) >> 8,
+						 (frameMS.node_data[j] & 0xFF00) >> 8,
 						 frameMS.node_data[j] & 0xFF);
 					index += 4;
 				}
@@ -2119,8 +1853,7 @@ END:
 				for (j = 0; j < frameSS.header.force_node; j++) {
 					snprintf(&driver_test_buff[index], 5,
 						 "%02X%02X",
-						 (frameSS.
-						  force_data[j] & 0xFF00) >> 8,
+						 (frameSS.force_data[j] & 0xFF00) >> 8,
 						 frameSS.force_data[j] & 0xFF);
 					index += 4;
 				}
@@ -2128,8 +1861,7 @@ END:
 				for (j = 0; j < frameSS.header.sense_node; j++) {
 					snprintf(&driver_test_buff[index], 5,
 						 "%02X%02X",
-						 (frameSS.
-						  sense_data[j] & 0xFF00) >> 8,
+						 (frameSS.sense_data[j] & 0xFF00) >> 8,
 						 frameSS.sense_data[j] & 0xFF);
 					index += 4;
 				}
@@ -2248,10 +1980,8 @@ END:
 				for (j = 0; j < totCompData.node_data_size; j++) {
 					snprintf(&driver_test_buff[index], 5,
 						 "%02X%02X",
-						 (totCompData.
-						  node_data[j] & 0xFF00) >> 8,
-						 totCompData.
-						 node_data[j] & 0xFF);
+						 (totCompData.node_data[j] & 0xFF00) >> 8,
+						 totCompData.node_data[j] & 0xFF);
 					index += 4;
 				}
 
@@ -2275,8 +2005,7 @@ END:
 				     j++) {
 					snprintf(&driver_test_buff[index], 5,
 						 "%02X%02X",
-						 (totComData.
-						  ix_fm[j] & 0xFF00) >> 8,
+						 (totComData.ix_fm[j] & 0xFF00) >> 8,
 						 totComData.ix_fm[j] & 0xFF);
 					index += 4;
 				}
@@ -2285,8 +2014,7 @@ END:
 				     j++) {
 					snprintf(&driver_test_buff[index], 5,
 						 "%02X%02X",
-						 (totComData.
-						  ix_sn[j] & 0xFF00) >> 8,
+						 (totComData.ix_sn[j] & 0xFF00) >> 8,
 						 totComData.ix_sn[j] & 0xFF);
 					index += 4;
 				}
@@ -2295,8 +2023,7 @@ END:
 				     j++) {
 					snprintf(&driver_test_buff[index], 5,
 						 "%02X%02X",
-						 (totComData.
-						  cx_fm[j] & 0xFF00) >> 8,
+						 (totComData.cx_fm[j] & 0xFF00) >> 8,
 						 totComData.cx_fm[j] & 0xFF);
 
 					index += 4;
@@ -2306,8 +2033,7 @@ END:
 				     j++) {
 					snprintf(&driver_test_buff[index], 5,
 						 "%02X%02X",
-						 (totComData.
-						  cx_sn[j] & 0xFF00) >> 8,
+						 (totComData.cx_sn[j] & 0xFF00) >> 8,
 						 totComData.cx_sn[j] & 0xFF);
 					index += 4;
 				}
@@ -2350,8 +2076,7 @@ END:
 			driver_test_buff[index++] = (size & 0xFF00) >> 8;
 			driver_test_buff[index++] = (size & 0x00FF);
 
-			driver_test_buff[index++] =
-			    (mess.counter & 0xFF00) >> 8;
+			driver_test_buff[index++] = (mess.counter & 0xFF00) >> 8;
 			driver_test_buff[index++] = (mess.counter & 0x00FF);
 
 			driver_test_buff[index++] = (mess.action & 0xFF00) >> 8;
@@ -2372,15 +2097,12 @@ END:
 					 "%02X%02X", (size & 0xFF00) >> 8,
 					 size & 0xFF);
 			index += 4;
-			index +=
-			    snprintf(&driver_test_buff[index], 5, "%04X",
-				     (u16) mess.counter);
-			index +=
-			    snprintf(&driver_test_buff[index], 5, "%04X",
-				     (u16) mess.action);
-			index +=
-			    snprintf(&driver_test_buff[index], 5, "%02X%02X",
-				     (res & 0xFF00) >> 8, res & 0xFF);
+			index += snprintf(&driver_test_buff[index], 5, "%04X",
+					  (u16) mess.counter);
+			index += snprintf(&driver_test_buff[index], 5, "%04X",
+					  (u16) mess.action);
+			index += snprintf(&driver_test_buff[index], 5, "%02X%02X",
+					  (res & 0xFF00) >> 8, res & 0xFF);
 		}
 
 		switch (funcToTest[0]) {
@@ -2401,20 +2123,17 @@ END:
 			} else {
 				j = mess.dummy;
 				for (; j < byteToRead + mess.dummy; j++)
-					index +=
-					    snprintf(&driver_test_buff[index],
-						     3, "%02X",
-						     (u8) readData[j]);
+					index += snprintf(&driver_test_buff[index],
+							  3, "%02X",
+							  (u8) readData[j]);
 			}
 			break;
 
 		case CMD_GETLIMITSFILE_BYTE:
 		case CMD_GETFWFILE_BYTE:
 			if (bin_output == 1) {
-				driver_test_buff[1] =
-				    (((fileSize + 3) / 4) & 0xFF00) >> 8;
-				driver_test_buff[2] =
-				    (((fileSize + 3) / 4) & 0x00FF);
+				driver_test_buff[1] = (((fileSize + 3) / 4) & 0xFF00) >> 8;
+				driver_test_buff[2] = (((fileSize + 3) / 4) & 0x00FF);
 
 				if (readData != NULL) {
 					memcpy(&driver_test_buff[index],
@@ -2427,10 +2146,9 @@ END:
 				index += addr;
 			} else {
 				for (j = 0; j < fileSize; j++) {
-					index +=
-					    snprintf(&driver_test_buff[index],
-						     3, "%02X",
-						     (u8) readData[j]);
+					index += snprintf(&driver_test_buff[index],
+							  3, "%02X",
+							  (u8) readData[j]);
 				}
 				for (; j < addr; j++)
 					index += snprintf(&driver_test_buff[index], 3, "%02X", 0);
@@ -2467,27 +2185,20 @@ ERROR:
 /**
  * file_operations struct which define the functions for the canonical operation on a device file node (open. read, write etc.)
  */
-/*
-static struct file_operations fts_driver_test_ops = {
-	.open = fts_open,
-	.read = seq_read,
-	.write = fts_driver_test_write,
-	.llseek = seq_lseek,
-	.release = seq_release
-};
-*/
-static const struct proc_ops fts_driver_test_ops = {
-	.proc_read = fts_driver_test_read,
+static struct proc_ops fts_driver_test_ops = {
+	.proc_open = fts_open,
+	.proc_read = seq_read,
 	.proc_write = fts_driver_test_write,
+	.proc_lseek = seq_lseek,
+	.proc_release = seq_release
 };
-
 
 /*****************************************************************************/
 
 /**
-* This function is called in the probe to initialize and create the directory /proc/fts and the driver test file node DRIVER_TEST_FILE_NODE into the /proc file system
-* @return OK if success or an error code which specify the type of error encountered
-*/
+ * This function is called in the probe to initialize and create the directory /proc/fts and the driver test file node DRIVER_TEST_FILE_NODE into the /proc file system
+ * @return OK if success or an error code which specify the type of error encountered
+ */
 int fts_proc_init(void)
 {
 	struct proc_dir_entry *entry;
@@ -2501,13 +2212,12 @@ int fts_proc_init(void)
 	}
 
 	entry = proc_create(DRIVER_TEST_FILE_NODE, 0644, fts_dir,
-			&fts_driver_test_ops);
+			    &fts_driver_test_ops);
 
-	if (entry) {
-		logError(1, "%s %s: proc entry CREATED! \n", tag, __func__);
-	} else {
-		logError(1, "%s %s: error creating proc entry! \n", tag,
-			 __func__);
+	if (entry)
+		logError(1, "%s %s: proc entry CREATED!\n", tag, __func__);
+	else {
+		logError(1, "%s %s: error creating proc entry!\n", tag, __func__);
 		retval = -ENOMEM;
 		goto badfile;
 	}
@@ -2519,9 +2229,9 @@ out:
 }
 
 /**
-* Delete and Clean from the file system, all the references to the driver test file node
-* @return OK
-*/
+ * Delete and Clean from the file system, all the references to the driver test file node
+ * @return OK
+ */
 int fts_proc_remove(void)
 {
 	remove_proc_entry(DRIVER_TEST_FILE_NODE, fts_dir);

@@ -1,4 +1,4 @@
-config TOUCHSCREEN_ST_FTS_V521_SPI
+config TOUCHSCREEN_ST_FTS_V521_SPI_L11A
 	tristate "ST FTS V521 I2C Touchscreen"
 	depends on I2C
 	help

@@ -1,22 +1,21 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 /*
-
-**************************************************************************
-**                        STMicroelectronics							**
-**************************************************************************
-**                        marco.cali@st.com								**
-**************************************************************************
-*                                                                        *
-*                  FTS functions for getting frames						 *
-*                                                                        *
-**************************************************************************
-**************************************************************************
-
-*/
+ **************************************************************************
+ **                        STMicroelectronics                            **
+ **************************************************************************
+ **                        marco.cali@st.com                             **
+ **************************************************************************
+ *                                                                        *
+ *                  FTS functions for getting frames                      *
+ *                                                                        *
+ **************************************************************************
+ **************************************************************************
+ */
 
 /*!
-* \file ftsFrame.h
-* \brief Contains all the definitions and structs to work with frames
-*/
+ * \file ftsFrame.h
+ * \brief Contains all the definitions and structs to work with frames
+ */
 
 #ifndef FTS_FRAME_H
 #define FTS_FRAME_H
@@ -24,14 +23,13 @@
 #include "ftsSoftware.h"
 
 /*Number of data bytes for each node */
-#define BYTES_PER_NODE							2	/*number of data bytes for each node*/
-
-#define RETRY_FRAME_DATA_READ					2	/*max number of attempts to read a frame*/
+#define BYTES_PER_NODE			2	/*number of data bytes for each node*/
+#define RETRY_FRAME_DATA_READ		2	/*max number of attempts to read a frame*/
 
 /**
-* Possible types of MS frames
-*/
-typedef enum{
+ * Possible types of MS frames
+ */
+typedef enum {
 	MS_RAW = 0,																	/*Mutual Sense Raw Frame*/
 	MS_FILTER = 1,																/*Mutual Sense Filtered Frame*/
 	MS_STRENGTH = 2,															/*Mutual Sense Strength Frame (Baseline-Raw)*/
@@ -47,9 +45,9 @@ typedef enum{
 } MSFrameType;
 
 /**
-* Possible types of SS frames
-*/
-typedef enum{
+ * Possible types of SS frames
+ */
+typedef enum {
 	SS_RAW = 0,																	/*Self Sense Raw Frame*/
 	SS_FILTER = 1,																/*Self Sense Filtered Frame*/
 	SS_STRENGTH = 2,															/*Self Sense Strength Frame (Baseline-Raw)*/
@@ -65,8 +63,8 @@ typedef enum{
 } SSFrameType;
 
 /**
-* Struct which contains the data of a MS Frame
-*/
+ * Struct which contains the data of a MS Frame
+ */
 typedef struct {
 	DataHeader header;	/*Header which contain basic info of the frame*/
 	short *node_data;	/*Data of the frame*/
@@ -74,8 +72,8 @@ typedef struct {
 } MutualSenseFrame;
 
 /**
-* Struct which contains the data of a SS Frame
-*/
+ * Struct which contains the data of a SS Frame
+ */
 typedef struct {
 	DataHeader header;	/*Header which contain basic info of the frame*/
 	short *force_data;	/*Force Channels Data*/

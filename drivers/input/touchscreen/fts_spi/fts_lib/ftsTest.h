@@ -1,22 +1,21 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 /*
-
-**************************************************************************
-**                        STMicroelectronics							**
-**************************************************************************
-**                        marco.cali@st.com								**
-**************************************************************************
-*                                                                        *
-*						FTS API for MP test								 *
-*                                                                        *
-**************************************************************************
-**************************************************************************
-
-*/
+ **************************************************************************
+ **                        STMicroelectronics                            **
+ **************************************************************************
+ **                        marco.cali@st.com                             **
+ **************************************************************************
+ *                                                                        *
+ *                         FTS API for MP test                            *
+ *                                                                        *
+ **************************************************************************
+ **************************************************************************
+ */
 
 /*!
-* \file ftsTest.h
-* \brief Contains all the definitions and structs related to the Mass Production Test
-*/
+ * \file ftsTest.h
+ * \brief Contains all the definitions and structs related to the Mass Production Test
+ */
 
 #ifndef FTS_TEST_H
 #define FTS_TEST_H
@@ -24,17 +23,17 @@
 #include "ftsSoftware.h"
 
 #ifndef LIMITS_H_FILE
-#define LIMITS_FILE						"stm_fts_production_limits.csv"			/*Name of the Production Test Limit File*/
+#define LIMITS_FILE			"stm_fts_production_limits.csv"			/*Name of the Production Test Limit File*/
 #else
-#define LIMITS_FILE						"NULL"
+#define LIMITS_FILE			"NULL"
 #endif
 
-#define WAIT_FOR_FRESH_FRAMES			200										/*Time in ms to wait after start to sensing before reading a frame*/
-#define WAIT_AFTER_SENSEOFF				50										/*Time in ms to wait after stop sensing and before reading a frame from memory*/
+#define WAIT_FOR_FRESH_FRAMES		200										/*Time in ms to wait after start to sensing before reading a frame*/
+#define WAIT_AFTER_SENSEOFF		50										/*Time in ms to wait after stop sensing and before reading a frame from memory*/
 
-#define NO_INIT							0										/*No Initialization required during the MP*/
+#define NO_INIT				0										/*No Initialization required during the MP*/
 
-#define RETRY_INIT_BOOT					3										/*number of retry of the initialization process at boot*/
+#define RETRY_INIT_BOOT			3										/*number of retry of the initialization process at boot*/
 
 /** @defgroup mp_test Mass Production Test
  * Mass production test API.
@@ -61,111 +60,111 @@
  * Labels present in the Limit File and associated to the test items of TestToDo
  * @{
  */
-#define MS_RAW_MIN_MAX					"MS_RAW_DATA_MIN_MAX"
-#define MS_RAW_EACH_NODE_MIN			"MS_RAW_DATA_EACH_MIN"
-#define MS_RAW_EACH_NODE_MAX			"MS_RAW_DATA_EACH_MAX"
-#define MS_RAW_GAP						"MS_RAW_DATA_GAP"
-#define MS_RAW_ADJH						"MS_RAW_DATA_ADJ_HORIZONTAL"
-#define MS_RAW_ADJV						"MS_RAW_DATA_ADJ_VERTICAL"
-#define MS_RAW_ITO_ADJH					"MS_RAW_ITO_DATA_ADJ_HORIZONTAL"
-#define MS_RAW_ITO_ADJV					"MS_RAW_ITO_DATA_ADJ_VERTICAL"
-#define MS_RAW_LP_MIN_MAX				"MS_RAW_LOWPOWER_DATA_MIN_MAX"
-#define MS_RAW_LP_GAP					"MS_RAW_LOWPOWER_DATA_GAP"
-#define MS_RAW_LP_ADJH					"MS_RAW_LOWPOWER_DATA_ADJ_HORIZONTAL"
-#define MS_RAW_LP_ADJV					"MS_RAW_LOWPOWER_DATA_ADJ_VERTICAL"
-#define MS_CX1_MIN_MAX					"MS_TOUCH_ACTIVE_CX1_MIN_MAX"
-#define MS_CX2_MAP_MIN					"MS_TOUCH_ACTIVE_CX2_MIN"
-#define MS_CX2_MAP_MAX					"MS_TOUCH_ACTIVE_CX2_MAX"
-#define MS_CX2_ADJH_MAP_MAX				"MS_TOUCH_ACTIVE_CX2_ADJ_HORIZONTAL"
-#define MS_CX2_ADJV_MAP_MAX				"MS_TOUCH_ACTIVE_CX2_ADJ_VERTICAL"
-#define MS_TOTAL_CX_MAP_MIN				"MS_TOUCH_ACTIVE_TOTAL_CX_MIN"
-#define MS_TOTAL_CX_MAP_MAX				"MS_TOUCH_ACTIVE_TOTAL_CX_MAX"
-#define MS_TOTAL_CX_ADJH_MAP_MAX		"MS_TOUCH_ACTIVE_TOTAL_CX_ADJ_HORIZONTAL"
-#define MS_TOTAL_CX_ADJV_MAP_MAX		"MS_TOUCH_ACTIVE_TOTAL_CX_ADJ_VERTICAL"
+#define MS_RAW_MIN_MAX			"MS_RAW_DATA_MIN_MAX"
+#define MS_RAW_EACH_NODE_MIN		"MS_RAW_DATA_EACH_MIN"
+#define MS_RAW_EACH_NODE_MAX		"MS_RAW_DATA_EACH_MAX"
+#define MS_RAW_GAP			"MS_RAW_DATA_GAP"
+#define MS_RAW_ADJH			"MS_RAW_DATA_ADJ_HORIZONTAL"
+#define MS_RAW_ADJV			"MS_RAW_DATA_ADJ_VERTICAL"
+#define MS_RAW_ITO_ADJH			"MS_RAW_ITO_DATA_ADJ_HORIZONTAL"
+#define MS_RAW_ITO_ADJV			"MS_RAW_ITO_DATA_ADJ_VERTICAL"
+#define MS_RAW_LP_MIN_MAX		"MS_RAW_LOWPOWER_DATA_MIN_MAX"
+#define MS_RAW_LP_GAP			"MS_RAW_LOWPOWER_DATA_GAP"
+#define MS_RAW_LP_ADJH			"MS_RAW_LOWPOWER_DATA_ADJ_HORIZONTAL"
+#define MS_RAW_LP_ADJV			"MS_RAW_LOWPOWER_DATA_ADJ_VERTICAL"
+#define MS_CX1_MIN_MAX			"MS_TOUCH_ACTIVE_CX1_MIN_MAX"
+#define MS_CX2_MAP_MIN			"MS_TOUCH_ACTIVE_CX2_MIN"
+#define MS_CX2_MAP_MAX			"MS_TOUCH_ACTIVE_CX2_MAX"
+#define MS_CX2_ADJH_MAP_MAX		"MS_TOUCH_ACTIVE_CX2_ADJ_HORIZONTAL"
+#define MS_CX2_ADJV_MAP_MAX		"MS_TOUCH_ACTIVE_CX2_ADJ_VERTICAL"
+#define MS_TOTAL_CX_MAP_MIN		"MS_TOUCH_ACTIVE_TOTAL_CX_MIN"
+#define MS_TOTAL_CX_MAP_MAX		"MS_TOUCH_ACTIVE_TOTAL_CX_MAX"
+#define MS_TOTAL_CX_ADJH_MAP_MAX	"MS_TOUCH_ACTIVE_TOTAL_CX_ADJ_HORIZONTAL"
+#define MS_TOTAL_CX_ADJV_MAP_MAX	"MS_TOUCH_ACTIVE_TOTAL_CX_ADJ_VERTICAL"
 #define MS_CX1_LP_MIN_MAX		"MS_TOUCH_LOWPOWER_CX1_MIN_MAX"
 #define MS_CX2_LP_MAP_MIN		"MS_TOUCH_LOWPOWER_CX2_MIN"
 #define MS_CX2_LP_MAP_MAX		"MS_TOUCH_LOWPOWER_CX2_MAX"
-#define MS_CX2_ADJH_LP_MAP_MAX	"MS_TOUCH_LOWPOWER_CX2_ADJ_HORIZONTAL"
-#define MS_CX2_ADJV_LP_MAP_MAX	"MS_TOUCH_LOWPOWER_CX2_ADJ_VERTICAL"
-#define MS_TOTAL_CX_LP_MAP_MIN	"MS_TOUCH_LOWPOWER_TOTAL_CX_MIN"
-#define MS_TOTAL_CX_LP_MAP_MAX	"MS_TOUCH_LOWPOWER_TOTAL_CX_MAX"
-#define MS_TOTAL_CX_ADJH_LP_MAP_MAX "MS_TOUCH_LOWPOWER_TOTAL_CX_ADJ_HORIZONTAL"
-#define MS_TOTAL_CX_ADJV_LP_MAP_MAX "MS_TOUCH_LOWPOWER_TOTAL_CX_ADJ_VERTICAL"
-#define SS_RAW_FORCE_MIN_MAX			"SS_RAW_DATA_FORCE_MIN_MAX"
-#define SS_RAW_FORCE_EACH_NODE_MIN 	"SS_RAW_DATA_FORCE_EACH_MIN"
+#define MS_CX2_ADJH_LP_MAP_MAX		"MS_TOUCH_LOWPOWER_CX2_ADJ_HORIZONTAL"
+#define MS_CX2_ADJV_LP_MAP_MAX		"MS_TOUCH_LOWPOWER_CX2_ADJ_VERTICAL"
+#define MS_TOTAL_CX_LP_MAP_MIN		"MS_TOUCH_LOWPOWER_TOTAL_CX_MIN"
+#define MS_TOTAL_CX_LP_MAP_MAX		"MS_TOUCH_LOWPOWER_TOTAL_CX_MAX"
+#define MS_TOTAL_CX_ADJH_LP_MAP_MAX	"MS_TOUCH_LOWPOWER_TOTAL_CX_ADJ_HORIZONTAL"
+#define MS_TOTAL_CX_ADJV_LP_MAP_MAX	"MS_TOUCH_LOWPOWER_TOTAL_CX_ADJ_VERTICAL"
+#define SS_RAW_FORCE_MIN_MAX		"SS_RAW_DATA_FORCE_MIN_MAX"
+#define SS_RAW_FORCE_EACH_NODE_MIN	"SS_RAW_DATA_FORCE_EACH_MIN"
 #define SS_RAW_FORCE_EACH_NODE_MAX	"SS_RAW_DATA_FORCE_EACH_MAX"
-#define SS_RAW_SENSE_MIN_MAX			"SS_RAW_DATA_SENSE_MIN_MAX"
-#define SS_RAW_SENSE_EACH_NODE_MIN 	"SS_RAW_DATA_SENSE_EACH_MIN"
+#define SS_RAW_SENSE_MIN_MAX		"SS_RAW_DATA_SENSE_MIN_MAX"
+#define SS_RAW_SENSE_EACH_NODE_MIN	"SS_RAW_DATA_SENSE_EACH_MIN"
 #define SS_RAW_SENSE_EACH_NODE_MAX	"SS_RAW_DATA_SENSE_EACH_MAX"
-#define SS_RAW_FORCE_GAP				"SS_RAW_DATA_FORCE_GAP"
-#define SS_RAW_SENSE_GAP				"SS_RAW_DATA_SENSE_GAP"
-#define SS_RAW_LP_FORCE_MIN_MAX			"SS_RAW_LOWPOWER_DATA_FORCE_MIN_MAX"
-#define SS_RAW_LP_SENSE_MIN_MAX			"SS_RAW_LOWPOWER_DATA_SENSE_MIN_MAX"
-#define SS_RAW_LP_FORCE_GAP				"SS_RAW_LOWPOWER_DATA_FORCE_GAP"
-#define SS_RAW_LP_SENSE_GAP				"SS_RAW_LOWPOWER_DATA_SENSE_GAP"
-#define SS_IX1_FORCE_MIN_MAX			"SS_TOUCH_ACTIVE_IX1_FORCE_MIN_MAX"
-#define SS_IX1_SENSE_MIN_MAX			"SS_TOUCH_ACTIVE_IX1_SENSE_MIN_MAX"
-#define SS_CX1_FORCE_MIN_MAX			"SS_TOUCH_ACTIVE_CX1_FORCE_MIN_MAX"
-#define SS_CX1_SENSE_MIN_MAX			"SS_TOUCH_ACTIVE_CX1_SENSE_MIN_MAX"
-#define SS_IX2_FORCE_MAP_MIN			"SS_TOUCH_ACTIVE_IX2_FORCE_MIN"
-#define SS_IX2_FORCE_MAP_MAX			"SS_TOUCH_ACTIVE_IX2_FORCE_MAX"
-#define SS_IX2_SENSE_MAP_MIN			"SS_TOUCH_ACTIVE_IX2_SENSE_MIN"
-#define SS_IX2_SENSE_MAP_MAX			"SS_TOUCH_ACTIVE_IX2_SENSE_MAX"
-#define SS_IX2_FORCE_ADJV_MAP_MAX		"SS_TOUCH_ACTIVE_IX2_ADJ_VERTICAL"
-#define SS_IX2_SENSE_ADJH_MAP_MAX		"SS_TOUCH_ACTIVE_IX2_ADJ_HORIZONTAL"
-#define SS_CX2_FORCE_MAP_MIN			"SS_TOUCH_ACTIVE_CX2_FORCE_MIN"
-#define SS_CX2_FORCE_MAP_MAX			"SS_TOUCH_ACTIVE_CX2_FORCE_MAX"
-#define SS_CX2_SENSE_MAP_MIN			"SS_TOUCH_ACTIVE_CX2_SENSE_MIN"
-#define SS_CX2_SENSE_MAP_MAX			"SS_TOUCH_ACTIVE_CX2_SENSE_MAX"
-#define SS_CX2_FORCE_ADJV_MAP_MAX		"SS_TOUCH_ACTIVE_CX2_ADJ_VERTICAL"
-#define SS_CX2_SENSE_ADJH_MAP_MAX		"SS_TOUCH_ACTIVE_CX2_ADJ_HORIZONTAL"
+#define SS_RAW_FORCE_GAP		"SS_RAW_DATA_FORCE_GAP"
+#define SS_RAW_SENSE_GAP		"SS_RAW_DATA_SENSE_GAP"
+#define SS_RAW_LP_FORCE_MIN_MAX		"SS_RAW_LOWPOWER_DATA_FORCE_MIN_MAX"
+#define SS_RAW_LP_SENSE_MIN_MAX		"SS_RAW_LOWPOWER_DATA_SENSE_MIN_MAX"
+#define SS_RAW_LP_FORCE_GAP		"SS_RAW_LOWPOWER_DATA_FORCE_GAP"
+#define SS_RAW_LP_SENSE_GAP		"SS_RAW_LOWPOWER_DATA_SENSE_GAP"
+#define SS_IX1_FORCE_MIN_MAX		"SS_TOUCH_ACTIVE_IX1_FORCE_MIN_MAX"
+#define SS_IX1_SENSE_MIN_MAX		"SS_TOUCH_ACTIVE_IX1_SENSE_MIN_MAX"
+#define SS_CX1_FORCE_MIN_MAX		"SS_TOUCH_ACTIVE_CX1_FORCE_MIN_MAX"
+#define SS_CX1_SENSE_MIN_MAX		"SS_TOUCH_ACTIVE_CX1_SENSE_MIN_MAX"
+#define SS_IX2_FORCE_MAP_MIN		"SS_TOUCH_ACTIVE_IX2_FORCE_MIN"
+#define SS_IX2_FORCE_MAP_MAX		"SS_TOUCH_ACTIVE_IX2_FORCE_MAX"
+#define SS_IX2_SENSE_MAP_MIN		"SS_TOUCH_ACTIVE_IX2_SENSE_MIN"
+#define SS_IX2_SENSE_MAP_MAX		"SS_TOUCH_ACTIVE_IX2_SENSE_MAX"
+#define SS_IX2_FORCE_ADJV_MAP_MAX	"SS_TOUCH_ACTIVE_IX2_ADJ_VERTICAL"
+#define SS_IX2_SENSE_ADJH_MAP_MAX	"SS_TOUCH_ACTIVE_IX2_ADJ_HORIZONTAL"
+#define SS_CX2_FORCE_MAP_MIN		"SS_TOUCH_ACTIVE_CX2_FORCE_MIN"
+#define SS_CX2_FORCE_MAP_MAX		"SS_TOUCH_ACTIVE_CX2_FORCE_MAX"
+#define SS_CX2_SENSE_MAP_MIN		"SS_TOUCH_ACTIVE_CX2_SENSE_MIN"
+#define SS_CX2_SENSE_MAP_MAX		"SS_TOUCH_ACTIVE_CX2_SENSE_MAX"
+#define SS_CX2_FORCE_ADJV_MAP_MAX	"SS_TOUCH_ACTIVE_CX2_ADJ_VERTICAL"
+#define SS_CX2_SENSE_ADJH_MAP_MAX	"SS_TOUCH_ACTIVE_CX2_ADJ_HORIZONTAL"
 
-#define SS_TOTAL_IX_FORCE_MAP_MIN		"SS_TOUCH_ACTIVE_TOTAL_IX_FORCE_MIN"
-#define SS_TOTAL_IX_FORCE_MAP_MAX		"SS_TOUCH_ACTIVE_TOTAL_IX_FORCE_MAX"
-#define SS_TOTAL_IX_SENSE_MAP_MIN		"SS_TOUCH_ACTIVE_TOTAL_IX_SENSE_MIN"
-#define SS_TOTAL_IX_SENSE_MAP_MAX		"SS_TOUCH_ACTIVE_TOTAL_IX_SENSE_MAX"
+#define SS_TOTAL_IX_FORCE_MAP_MIN	"SS_TOUCH_ACTIVE_TOTAL_IX_FORCE_MIN"
+#define SS_TOTAL_IX_FORCE_MAP_MAX	"SS_TOUCH_ACTIVE_TOTAL_IX_FORCE_MAX"
+#define SS_TOTAL_IX_SENSE_MAP_MIN	"SS_TOUCH_ACTIVE_TOTAL_IX_SENSE_MIN"
+#define SS_TOTAL_IX_SENSE_MAP_MAX	"SS_TOUCH_ACTIVE_TOTAL_IX_SENSE_MAX"
 #define SS_TOTAL_IX_FORCE_ADJV_MAP_MAX	"SS_TOUCH_ACTIVE_TOTAL_IX_ADJ_VERTICAL"
 #define SS_TOTAL_IX_SENSE_ADJH_MAP_MAX	"SS_TOUCH_ACTIVE_TOTAL_IX_ADJ_HORIZONTAL"
-#define SS_TOTAL_CX_FORCE_MAP_MIN		"SS_TOUCH_ACTIVE_TOTAL_CX_FORCE_MIN"
-#define SS_TOTAL_CX_FORCE_MAP_MAX		"SS_TOUCH_ACTIVE_TOTAL_CX_FORCE_MAX"
-#define SS_TOTAL_CX_SENSE_MAP_MIN		"SS_TOUCH_ACTIVE_TOTAL_CX_SENSE_MIN"
-#define SS_TOTAL_CX_SENSE_MAP_MAX		"SS_TOUCH_ACTIVE_TOTAL_CX_SENSE_MAX"
+#define SS_TOTAL_CX_FORCE_MAP_MIN	"SS_TOUCH_ACTIVE_TOTAL_CX_FORCE_MIN"
+#define SS_TOTAL_CX_FORCE_MAP_MAX	"SS_TOUCH_ACTIVE_TOTAL_CX_FORCE_MAX"
+#define SS_TOTAL_CX_SENSE_MAP_MIN	"SS_TOUCH_ACTIVE_TOTAL_CX_SENSE_MIN"
+#define SS_TOTAL_CX_SENSE_MAP_MAX	"SS_TOUCH_ACTIVE_TOTAL_CX_SENSE_MAX"
 #define SS_TOTAL_CX_FORCE_ADJV_MAP_MAX	"SS_TOUCH_ACTIVE_TOTAL_CX_ADJ_VERTICAL"
 #define SS_TOTAL_CX_SENSE_ADJH_MAP_MAX	"SS_TOUCH_ACTIVE_TOTAL_CX_ADJ_HORIZONTAL"
 
-#define MS_KEY_RAW_MIN_MAX				"MS_KEY_RAW_DATA_MIN_MAX"
-#define MS_KEY_CX1_MIN_MAX				"MS_KEY_CX1_MIN_MAX"
-#define MS_KEY_CX2_MAP_MIN				"MS_KEY_CX2_MIN"
-#define MS_KEY_CX2_MAP_MAX				"MS_KEY_CX2_MAX"
-#define MS_KEY_TOTAL_CX_MAP_MIN			"MS_KEY_TOTAL_CX_MIN"
-#define MS_KEY_TOTAL_CX_MAP_MAX			"MS_KEY_TOTAL_CX_MAX"
+#define MS_KEY_RAW_MIN_MAX		"MS_KEY_RAW_DATA_MIN_MAX"
+#define MS_KEY_CX1_MIN_MAX		"MS_KEY_CX1_MIN_MAX"
+#define MS_KEY_CX2_MAP_MIN		"MS_KEY_CX2_MIN"
+#define MS_KEY_CX2_MAP_MAX		"MS_KEY_CX2_MAX"
+#define MS_KEY_TOTAL_CX_MAP_MIN		"MS_KEY_TOTAL_CX_MIN"
+#define MS_KEY_TOTAL_CX_MAP_MAX		"MS_KEY_TOTAL_CX_MAX"
 
-#define SS_IX1_FORCE_W                  "IX1_FORCE_W"
-#define SS_IX2_FORCE_W                  "IX2_FORCE_W"
-#define SS_IX1_SENSE_W                  "IX1_SENSE_W"
-#define SS_IX2_SENSE_W                  "IX2_SENSE_W"
+#define SS_IX1_FORCE_W			"IX1_FORCE_W"
+#define SS_IX2_FORCE_W			"IX2_FORCE_W"
+#define SS_IX1_SENSE_W			"IX1_SENSE_W"
+#define SS_IX2_SENSE_W			"IX2_SENSE_W"
 
 /* SS HOVER*/
-#define SS_HOVER_RAW_FORCE_MIN_MAX			"SS_RAW_HOVER_DATA_FORCE_MIN_MAX"
-#define SS_HOVER_TOTAL_IX_FORCE_MAP_MIN		"SS_HOVER_TOTAL_IX_FORCE_MIN"
-#define SS_HOVER_TOTAL_IX_FORCE_MAP_MAX		"SS_HOVER_TOTAL_IX_FORCE_MAX"
-#define SS_HOVER_RAW_SENSE_MIN_MAX			"SS_RAW_HOVER_DATA_SENSE_MIN_MAX"
-#define SS_HOVER_TOTAL_IX_SENSE_MAP_MIN		"SS_HOVER_TOTAL_IX_SENSE_MIN"
-#define SS_HOVER_TOTAL_IX_SENSE_MAP_MAX		"SS_HOVER_TOTAL_IX_SENSE_MAX"
+#define SS_HOVER_RAW_FORCE_MIN_MAX	"SS_RAW_HOVER_DATA_FORCE_MIN_MAX"
+#define SS_HOVER_TOTAL_IX_FORCE_MAP_MIN	"SS_HOVER_TOTAL_IX_FORCE_MIN"
+#define SS_HOVER_TOTAL_IX_FORCE_MAP_MAX	"SS_HOVER_TOTAL_IX_FORCE_MAX"
+#define SS_HOVER_RAW_SENSE_MIN_MAX	"SS_RAW_HOVER_DATA_SENSE_MIN_MAX"
+#define SS_HOVER_TOTAL_IX_SENSE_MAP_MIN	"SS_HOVER_TOTAL_IX_SENSE_MIN"
+#define SS_HOVER_TOTAL_IX_SENSE_MAP_MAX	"SS_HOVER_TOTAL_IX_SENSE_MAX"
 
 /** @}*/
 
 /**
-* Struct used to specify which test perform during the Mass Production Test.
-* For each test item selected in this structure, there should be one or more labels associated in the Limit file from where load the thresholds
-*/
+ * Struct used to specify which test perform during the Mass Production Test.
+ * For each test item selected in this structure, there should be one or more labels associated in the Limit file from where load the thresholds
+ */
 typedef struct {
 	int MutualRaw;																/*MS Raw min/Max test*/
 	int MutualRawEachNode;
-    int MutualRawGap;															/*MS Raw Gap(max-min) test*/
+	int MutualRawGap;															/*MS Raw Gap(max-min) test*/
 	int MutualRawAdj;															/*MS Raw Adjacent test*/
 	int MutualRawLP;															/*MS Low Power Raw min/Max test*/
-    int MutualRawGapLP;															/*MS Low Power Raw Gap(max-min) test*/
+	int MutualRawGapLP;															/*MS Low Power Raw Gap(max-min) test*/
 	int MutualRawAdjLP;															/*MS Low Power Raw Adjacent test*/
 	int MutualRawAdjITO;														/*MS Raw Adjacent test during ITO test*/
 
@@ -176,12 +175,19 @@ typedef struct {
 	int MutualCxTotalAdj;														/*MS Total vertical and Horizontal Adj Cx2 min/Max (for each node) test*/
 	int MutualCx1LP;	/* /< MS LowPower Cx1 min/Max test */
 	int MutualCx2LP;	/* /< MS LowPower Cx2 min/Max (for each node) test */
-	int MutualCx2AdjLP;	/* /< MS LowPower Vertical and Horizontal Adj Cx2 min/Max
-				 * (for each node) test */
-	int MutualCxTotalLP;	/* /< MS Total LowPower Cx min/Max (for each node) test
-				 * */
-	int MutualCxTotalAdjLP;	/* /< MS Total LowPower vertical and Horizontal Adj Cx2
-				 * min/Max (for each node) test */
+
+/* /< MS LowPower Vertical and Horizontal Adj Cx2 min/Max
+ * (for each node) test
+ */
+	int MutualCx2AdjLP;
+
+/* /< MS Total LowPower Cx min/Max (for each node) test*/
+	int MutualCxTotalLP;
+
+/* /< MS Total LowPower vertical and Horizontal Adj Cx2
+ * min/Max (for each node) test
+ */
+	int MutualCxTotalAdjLP;
 
 	int MutualKeyRaw;															/*MS Raw Key min/Max test*/
 	int MutualKeyCx1;															/*MS Cx1 Key min/Max test*/
@@ -195,9 +201,9 @@ typedef struct {
 
 	int SelfForceRaw;															/*SS Force Raw min/Max test*/
 	int SelfForceRawMap;	/* /< SS Force Raw min/Max Map test */
-    int SelfForceRawGap;														/*SS Force Raw Gap(max-min) test*/
+	int SelfForceRawGap;														/*SS Force Raw Gap(max-min) test*/
 	int SelfForceRawLP;															/*SS Low Power Force Raw min/Max test*/
-    int SelfForceRawGapLP;														/*SS Low Power Force Raw Gap(max-min) test*/
+	int SelfForceRawGapLP;														/*SS Low Power Force Raw Gap(max-min) test*/
 
 	int SelfForceIx1;															/*SS Force Ix1 min/Max test*/
 	int SelfForceIx2;															/*SS Force Ix2 min/Max (for each node) test*/
@@ -211,10 +217,10 @@ typedef struct {
 	int SelfForceCxTotalAdj;													/*SS Total Vertical Adj Force Cx min/Max (for each node) test*/
 
 	int SelfSenseRaw;															/*SS Sense Raw min/Max test*/
-    int SelfSenseRawGap;														/*SS Sense Raw Gap(max-min) test*/
+	int SelfSenseRawGap;														/*SS Sense Raw Gap(max-min) test*/
 	int SelfSenseRawMap;	/* /< SS Sense Raw min/Max test for each node */
 	int SelfSenseRawLP;															/*SS Low Power Sense Raw min/Max test*/
-    int SelfSenseRawGapLP;														/*SS Low Power Sense Raw Gap(max-min) test*/
+	int SelfSenseRawGapLP;														/*SS Low Power Sense Raw Gap(max-min) test*/
 
 	int SelfSenseIx1;															/*SS Sense Ix1 min/Max test*/
 	int SelfSenseIx2;															/*SS Sense Ix2 min/Max (for each node) test*/
@@ -229,7 +235,7 @@ typedef struct {
 
 } TestToDo;
 
-#define MAX_LIMIT_FILE_NAME					100									/*max number of chars of the limit file name*/
+#define MAX_LIMIT_FILE_NAME		100									/*max number of chars of the limit file name*/
 
 /**
  * Struct which store the data coming from a Production Limit File
@@ -281,8 +287,7 @@ int production_test_ss_ix_cx(const char *path_limits, int stop_on_fail, TestToDo
 int production_test_data(const char *path_limits, int stop_on_fail, TestToDo *todo);
 int production_test_ms_key_cx(const char *path_limits, int stop_on_fail, TestToDo *todo);
 int production_test_ms_key_raw(const char *path_limits);
-int computeTotal(u8 *data, u8 main, int row, int column, int m, int n,
-		 u16 **result);
+int computeTotal(u8 *data, u8 main, int row, int column, int m, int n, u16 **result);
 /** @}*/
 
 /**

@@ -1,7 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 /*!
-* \file fts_fw.h
-* \brief Contains the size and the byte array of the fw file to burn into the IC
-*/
+ * \file fts_fw.h
+ * \brief Contains the size and the byte array of the fw file to burn into the IC
+ */
 #ifndef FTS_FW_H
 #define FTS_FW_H
 /*This is an auto generated header file*/

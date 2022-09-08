@@ -1,21 +1,21 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 /*
+ **************************************************************************
+ **                        STMicroelectronics                            **
+ **************************************************************************
+ **                        marco.cali@st.com                             **
+ **************************************************************************
+ *                                                                        *
+ *               FTS functions for getting Initialization Data            *
+ *                                                                        *
+ **************************************************************************
+ **************************************************************************
+ */
 
-**************************************************************************
-**                        STMicroelectronics							**
-**************************************************************************
-**                        marco.cali@st.com								**
-**************************************************************************
-*                                                                        *
-*               FTS functions for getting Initialization Data			 *
-*                                                                        *
-**************************************************************************
-**************************************************************************
-
-*/
 /*!
-* \file ftsCompensation.c
-* \brief Contains all the function to work with Initialization Data
-*/
+ * \file ftsCompensation.c
+ * \brief Contains all the function to work with Initialization Data
+ */
 
 #include "ftsCompensation.h"
 #include "ftsCore.h"
@@ -39,44 +39,44 @@
 #include <linux/ctype.h>
 
 /**
-* Request to the FW to load the specified Initialization Data
-* @param type type of Initialization data to load @link load_opt Load Host Data Option @endlink
-* @return OK if success or an error code which specify the type of error encountered
-*/
+ * Request to the FW to load the specified Initialization Data
+ * @param type of Initialization data to load @link load_opt Load Host Data Option @endlink
+ * @return OK if success or an error code which specify the type of error encountered
+ */
 int requestCompensationData(u8 type)
 {
 	int ret = ERROR_OP_NOT_ALLOW;
 	int retry = 0;
 
-	logError(0, "%s %s: Requesting compensation data... \n", tag, __func__,
+	logError(0, "%s %s: Requesting compensation data...\n", tag, __func__,
 		 retry + 1);
 	while (retry < RETRY_COMP_DATA_READ) {
 		ret = writeSysCmd(SYS_CMD_LOAD_DATA, &type, 1);
 		if (ret < OK) {
-			logError(1, "%s %s: failed at %d attemp! \n", tag,
+			logError(1, "%s %s: failed at %d attemp!\n", tag,
 				 __func__, retry + 1);
 			retry += 1;
 		} else {
 			logError(0,
-				 "%s %s: Request Compensation data FINISHED! \n",
+				 "%s %s: Request Compensation data FINISHED!\n",
 				 tag, __func__);
 			return OK;
 		}
 	}
 
-	logError(1, "%s %s: Requesting compensation data... ERROR %08X \n", tag,
+	logError(1, "%s %s: Requesting compensation data... ERROR %08X\n", tag,
 		 __func__, ret | ERROR_REQU_COMP_DATA);
 	return ret | ERROR_REQU_COMP_DATA;
 
 }
 
 /**
-* Read Initialization Data Header and check that the type loaded match with the one previously requested
-* @param type type of Initialization data requested @link load_opt Load Host Data Option @endlink
-* @param header pointer to DataHeader variable which will contain the header
-* @param address pointer to a variable which will contain the updated address to the next data
-* @return OK if success or an error code which specify the type of error encountered
-*/
+ * Read Initialization Data Header and check that the type loaded match with the one previously requested
+ * @param type of Initialization data requested @link load_opt Load Host Data Option @endlink
+ * @param header pointer to DataHeader variable which will contain the header
+ * @param address pointer to a variable which will contain the updated address to the next data
+ * @return OK if success or an error code which specify the type of error encountered
+ */
 int readCompensationDataHeader(u8 type, DataHeader *header, u64 *address)
 {
 
@@ -84,21 +84,20 @@ int readCompensationDataHeader(u8 type, DataHeader *header, u64 *address)
 	u8 data[COMP_DATA_HEADER];
 	int ret;
 
-	ret =
-	    fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, offset, data,
-			      COMP_DATA_HEADER, DUMMY_FRAMEBUFFER);
+	ret = fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, offset, data,
+				COMP_DATA_HEADER, DUMMY_FRAMEBUFFER);
 	if (ret < OK) {
 		logError(1,
-			 "%s %s: error while reading data header ERROR %08X \n",
+			 "%s %s: error while reading data header ERROR %08X\n",
 			 tag, __func__, ret);
 		return ret;
 	}
 
-	logError(0, "%s Read Data Header done! \n", tag);
+	logError(0, "%s Read Data Header done!\n", tag);
 
 	if (data[0] != HEADER_SIGNATURE) {
 		logError(1,
-			 "%s %s: The Header Signature was wrong! %02X != %02X ERROR %08X \n",
+			 "%s %s: The Header Signature was wrong! %02X != %02X ERROR %08X\n",
 			 tag, __func__, data[0], HEADER_SIGNATURE,
 			 ERROR_WRONG_DATA_SIGN);
 		return ERROR_WRONG_DATA_SIGN;
@@ -110,7 +109,7 @@ int readCompensationDataHeader(u8 type, DataHeader *header, u64 *address)
 		return ERROR_DIFF_DATA_TYPE;
 	}
 
-	logError(0, "%s Type = %02X of Compensation data OK! \n", tag, type);
+	logError(0, "%s Type = %02X of Compensation data OK!\n", tag, type);
 
 	header->type = type;
 
@@ -121,22 +120,21 @@ int readCompensationDataHeader(u8 type, DataHeader *header, u64 *address)
 }
 
 /**
-* Read MS Global Initialization data from the buffer such as Cx1
-* @param address pointer to a variable which contain the address from where to read the data and will contain the updated address to the next data
-* @param global pointer to MutualSenseData variable which will contain the MS initialization data
-* @return OK if success or an error code which specify the type of error encountered
-*/
+ * Read MS Global Initialization data from the buffer such as Cx1
+ * @param address pointer to a variable which contain the address from where to read the data and will contain the updated address to the next data
+ * @param global pointer to MutualSenseData variable which will contain the MS initialization data
+ * @return OK if success or an error code which specify the type of error encountered
+ */
 int readMutualSenseGlobalData(u64 *address, MutualSenseData *global)
 {
 
 	u8 data[COMP_DATA_GLOBAL];
 	int ret;
 
-	logError(0, "%s Address for Global data= %04X \n", tag, *address);
+	logError(0, "%s Address for Global data= %04X\n", tag, *address);
 
-	ret =
-	    fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, *address, data,
-			      COMP_DATA_GLOBAL, DUMMY_FRAMEBUFFER);
+	ret = fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, *address, data,
+				COMP_DATA_GLOBAL, DUMMY_FRAMEBUFFER);
 	if (ret < OK) {
 		logError(1, "%s %s: error while reading info data ERROR %08X\n",
 			 tag, __func__, ret);
@@ -148,7 +146,7 @@ int readMutualSenseGlobalData(u64 *address, MutualSenseData *global)
 	global->header.sense_node = data[1];
 	global->cx1 = data[2];
 
-	logError(0, "%s force_len = %d sense_len = %d CX1 = %d \n", tag,
+	logError(0, "%s force_len = %d sense_len = %d CX1 = %d\n", tag,
 		 global->header.force_node, global->header.sense_node,
 		 global->cx1);
 
@@ -158,20 +156,20 @@ int readMutualSenseGlobalData(u64 *address, MutualSenseData *global)
 }
 
 /**
-* Read MS Initialization data for each node from the buffer
-* @param address a variable which contain the address from where to read the data
-* @param node pointer to MutualSenseData variable which will contain the MS initialization data
-* @return OK if success or an error code which specify the type of error encountered
-*/
+ * Read MS Initialization data for each node from the buffer
+ * @param address a variable which contain the address from where to read the data
+ * @param node pointer to MutualSenseData variable which will contain the MS initialization data
+ * @return OK if success or an error code which specify the type of error encountered
+ */
 int readMutualSenseNodeData(u64 address, MutualSenseData *node)
 {
 
 	int ret;
 	int size = node->header.force_node * node->header.sense_node;
 
-	logError(0, "%s Address for Node data = %04X \n", tag, address);
+	logError(0, "%s Address for Node data = %04X\n", tag, address);
 
-	node->node_data = (i8 *) kmalloc(size * (sizeof(i8)), GFP_KERNEL);
+	node->node_data = kmalloc(size * (sizeof(i8)), GFP_KERNEL);
 
 	if (node->node_data == NULL) {
 		logError(1, "%s %s: can not allocate node_data... ERROR %08X",
@@ -179,13 +177,12 @@ int readMutualSenseNodeData(u64 address, MutualSenseData *node)
 		return ERROR_ALLOC;
 	}
 
-	logError(0, "%s Node Data to read %d bytes \n", tag, size);
-	ret =
-	    fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, address,
-			      node->node_data, size, DUMMY_FRAMEBUFFER);
+	logError(0, "%s Node Data to read %d bytes\n", tag, size);
+	ret = fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, address,
+				node->node_data, size, DUMMY_FRAMEBUFFER);
 	if (ret < OK) {
 		logError(1,
-			 "%s %s: error while reading node data ERROR %08X \n",
+			 "%s %s: error while reading node data ERROR %08X\n",
 			 tag, __func__, ret);
 		kfree(node->node_data);
 		node->node_data = NULL;
@@ -193,23 +190,24 @@ int readMutualSenseNodeData(u64 address, MutualSenseData *node)
 	}
 	node->node_data_size = size;
 
-	logError(0, "%s Read node data OK! \n", tag);
+	logError(0, "%s Read node data OK!\n", tag);
 
 	return size;
 
 }
 
 /**
-* Perform all the steps to read the necessary info for MS Initialization data from the buffer and store it in a MutualSenseData variable
-* @param type type of MS Initialization data to read @link load_opt Load Host Data Option @endlink
-* @param data pointer to MutualSenseData variable which will contain the MS initialization data
-* @return OK if success or an error code which specify the type of error encountered
-*/
+ * Perform all the steps to read the necessary info for MS Initialization data from the buffer and store it in a MutualSenseData variable
+ * @param type of MS Initialization data to read @link load_opt Load Host Data Option @endlink
+ * @param data pointer to MutualSenseData variable which will contain the MS initialization data
+ * @return OK if success or an error code which specify the type of error encountered
+ */
 int readMutualSenseCompensationData(u8 type, MutualSenseData *data)
 {
 
 	int ret;
 	u64 address;
+
 	data->node_data = NULL;
 
 	if (!
@@ -237,7 +235,7 @@ int readMutualSenseCompensationData(u8 type, MutualSenseData *data)
 
 	ret = readMutualSenseGlobalData(&address, data);
 	if (ret < 0) {
-		logError(1, "%s %s: ERROR %08X \n", tag, __func__,
+		logError(1, "%s %s: ERROR %08X\n", tag, __func__,
 			 ERROR_COMP_DATA_GLOBAL);
 		return (ret | ERROR_COMP_DATA_GLOBAL);
 	}
@@ -254,23 +252,22 @@ int readMutualSenseCompensationData(u8 type, MutualSenseData *data)
 }
 
 /**
-* Read SS Global Initialization data from the buffer such as Ix1/Cx1 for force and sense
-* @param address pointer to a variable which contain the address from where to read the data and will contain the updated address to the next data
-* @param global pointer to MutualSenseData variable which will contain the SS initialization data
-* @return OK if success or an error code which specify the type of error encountered
-*/
+ * Read SS Global Initialization data from the buffer such as Ix1/Cx1 for force and sense
+ * @param address pointer to a variable which contain the address from where to read the data and will contain the updated address to the next data
+ * @param global pointer to MutualSenseData variable which will contain the SS initialization data
+ * @return OK if success or an error code which specify the type of error encountered
+ */
 int readSelfSenseGlobalData(u64 *address, SelfSenseData *global)
 {
 	int ret;
 	u8 data[COMP_DATA_GLOBAL];
 
-	logError(0, "%s Address for Global data= %04X \n", tag, *address);
-	ret =
-	    fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, *address, data,
-			      COMP_DATA_GLOBAL, DUMMY_FRAMEBUFFER);
+	logError(0, "%s Address for Global data= %04X\n", tag, *address);
+	ret = fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, *address, data,
+				COMP_DATA_GLOBAL, DUMMY_FRAMEBUFFER);
 	if (ret < OK) {
 		logError(1,
-			 "%s %s: error while reading the data... ERROR %08X \n",
+			 "%s %s: error while reading the data... ERROR %08X\n",
 			 tag, __func__, ret);
 		return ret;
 	}
@@ -287,10 +284,10 @@ int readSelfSenseGlobalData(u64 *address, SelfSenseData *global)
 	global->s_max_n = data[7];
 
 	logError(0,
-		 "%s force_len = %d sense_len = %d  f_ix1 = %d   s_ix1 = %d   f_cx1 = %d   s_cx1 = %d \n",
+		 "%s force_len = %d sense_len = %d  f_ix1 = %d   s_ix1 = %d   f_cx1 = %d   s_cx1 = %d\n",
 		 tag, global->header.force_node, global->header.sense_node,
 		 global->f_ix1, global->s_ix1, global->f_cx1, global->s_cx1);
-	logError(0, "%s max_n = %d   s_max_n = %d \n", tag, global->f_max_n,
+	logError(0, "%s max_n = %d   s_max_n = %d\n", tag, global->f_max_n,
 		 global->s_max_n);
 
 	*address += COMP_DATA_GLOBAL;
@@ -300,11 +297,11 @@ int readSelfSenseGlobalData(u64 *address, SelfSenseData *global)
 }
 
 /**
-* Read SS Initialization data for each node of force and sense channels from the buffer
-* @param address a variable which contain the address from where to read the data
-* @param node pointer to SelfSenseData variable which will contain the SS initialization data
-* @return OK if success or an error code which specify the type of error encountered
-*/
+ * Read SS Initialization data for each node of force and sense channels from the buffer
+ * @param address a variable which contain the address from where to read the data
+ * @param node pointer to SelfSenseData variable which will contain the SS initialization data
+ * @return OK if success or an error code which specify the type of error encountered
+ */
 int readSelfSenseNodeData(u64 address, SelfSenseData *node)
 {
 
@@ -312,8 +309,7 @@ int readSelfSenseNodeData(u64 address, SelfSenseData *node)
 	u8 data[TXNODE_MAX * 2 + RXNODE_MAX * 2];
 	int ret;
 
-	node->ix2_fm =
-	    (u8 *) kmalloc(node->header.force_node * (sizeof(u8)), GFP_KERNEL);
+	node->ix2_fm = kmalloc(node->header.force_node * (sizeof(u8)), GFP_KERNEL);
 	if (node->ix2_fm == NULL) {
 		logError(1,
 			 "%s %s: can not allocate memory for ix2_fm... ERROR %08X",
@@ -321,8 +317,7 @@ int readSelfSenseNodeData(u64 address, SelfSenseData *node)
 		return ERROR_ALLOC;
 	}
 
-	node->cx2_fm =
-	    (i8 *) kmalloc(node->header.force_node * (sizeof(i8)), GFP_KERNEL);
+	node->cx2_fm = kmalloc(node->header.force_node * (sizeof(i8)), GFP_KERNEL);
 	if (node->cx2_fm == NULL) {
 		logError(1,
 			 "%s %s: can not allocate memory for cx2_fm ... ERROR %08X",
@@ -330,8 +325,7 @@ int readSelfSenseNodeData(u64 address, SelfSenseData *node)
 		kfree(node->ix2_fm);
 		return ERROR_ALLOC;
 	}
-	node->ix2_sn =
-	    (u8 *) kmalloc(node->header.sense_node * (sizeof(u8)), GFP_KERNEL);
+	node->ix2_sn = kmalloc(node->header.sense_node * (sizeof(u8)), GFP_KERNEL);
 	if (node->ix2_sn == NULL) {
 		logError(1,
 			 "%s %s: can not allocate memory for ix2_sn ERROR %08X",
@@ -340,8 +334,7 @@ int readSelfSenseNodeData(u64 address, SelfSenseData *node)
 		kfree(node->cx2_fm);
 		return ERROR_ALLOC;
 	}
-	node->cx2_sn =
-	    (i8 *) kmalloc(node->header.sense_node * (sizeof(i8)), GFP_KERNEL);
+	node->cx2_sn = kmalloc(node->header.sense_node * (sizeof(i8)), GFP_KERNEL);
 	if (node->cx2_sn == NULL) {
 		logError(1,
 			 "%s %s: can not allocate memory for cx2_sn ERROR %08X",
@@ -352,16 +345,14 @@ int readSelfSenseNodeData(u64 address, SelfSenseData *node)
 		return ERROR_ALLOC;
 	}
 
-	logError(0, "%s Address for Node data = %02X \n", tag, address);
+	logError(0, "%s Address for Node data = %02X\n", tag, address);
 
-	logError(0, "%s Node Data to read %d bytes \n", tag, size);
+	logError(0, "%s Node Data to read %d bytes\n", tag, size);
 
-	ret =
-	    fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, address, data,
-			      size, DUMMY_FRAMEBUFFER);
+	ret = fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, address, data,
+				size, DUMMY_FRAMEBUFFER);
 	if (ret < OK) {
-		logError(1, "%s %s: error while reading data... ERROR %08X\n",
-			 tag, ret);
+		logError(1, "%s %s: error while reading data... ERROR %08X\n", tag, ret);
 		kfree(node->ix2_fm);
 		kfree(node->cx2_fm);
 		kfree(node->ix2_sn);
@@ -369,7 +360,7 @@ int readSelfSenseNodeData(u64 address, SelfSenseData *node)
 		return ret;
 	}
 
-	logError(0, "%s Read node data ok! \n", tag);
+	logError(0, "%s Read node data ok!\n", tag);
 
 	memcpy(node->ix2_fm, data, node->header.force_node);
 	memcpy(node->ix2_sn, &data[node->header.force_node],
@@ -386,11 +377,11 @@ int readSelfSenseNodeData(u64 address, SelfSenseData *node)
 }
 
 /**
-* Perform all the steps to read the necessary info for SS Initialization data from the buffer and store it in a SelfSenseData variable
-* @param type type of SS Initialization data to read @link load_opt Load Host Data Option @endlink
-* @param data pointer to SelfSenseData variable which will contain the SS initialization data
-* @return OK if success or an error code which specify the type of error encountered
-*/
+ * Perform all the steps to read the necessary info for SS Initialization data from the buffer and store it in a SelfSenseData variable
+ * @param type of SS Initialization data to read @link load_opt Load Host Data Option @endlink
+ * @param data pointer to SelfSenseData variable which will contain the SS initialization data
+ * @return OK if success or an error code which specify the type of error encountered
+ */
 int readSelfSenseCompensationData(u8 type, SelfSenseData *data)
 {
 
@@ -446,21 +437,20 @@ int readSelfSenseCompensationData(u8 type, SelfSenseData *data)
 }
 
 /**
-* Read TOT MS Global Initialization data from the buffer such as number of force and sense channels
-* @param address pointer to a variable which contain the address from where to read the data and will contain the updated address to the next data
-* @param global pointer to a variable which will contain the TOT MS initialization data
-* @return OK if success or an error code which specify the type of error encountered
-*/
+ * Read TOT MS Global Initialization data from the buffer such as number of force and sense channels
+ * @param address pointer to a variable which contain the address from where to read the data and will contain the updated address to the next data
+ * @param global pointer to a variable which will contain the TOT MS initialization data
+ * @return OK if success or an error code which specify the type of error encountered
+ */
 int readTotMutualSenseGlobalData(u64 *address, TotMutualSenseData *global)
 {
 	int ret;
 	u8 data[COMP_DATA_GLOBAL];
 
-	logError(0, "%s Address for Global data= %04X \n", tag, *address);
+	logError(0, "%s Address for Global data= %04X\n", tag, *address);
 
-	ret =
-	    fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, *address, data,
-			      COMP_DATA_GLOBAL, DUMMY_FRAMEBUFFER);
+	ret = fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, *address, data,
+				COMP_DATA_GLOBAL, DUMMY_FRAMEBUFFER);
 	if (ret < OK) {
 		logError(1, "%s %s: error while reading info data ERROR %08X\n",
 			 tag, __func__, ret);
@@ -471,7 +461,7 @@ int readTotMutualSenseGlobalData(u64 *address, TotMutualSenseData *global)
 	global->header.force_node = data[0];
 	global->header.sense_node = data[1];
 
-	logError(0, "%s force_len = %d sense_len = %d \n", tag,
+	logError(0, "%s force_len = %d sense_len = %d\n", tag,
 		 global->header.force_node, global->header.sense_node);
 
 	*address += COMP_DATA_GLOBAL;
@@ -480,11 +470,11 @@ int readTotMutualSenseGlobalData(u64 *address, TotMutualSenseData *global)
 }
 
 /**
-* Read TOT MS Initialization data for each node from the buffer
-* @param address a variable which contain the address from where to read the data
-* @param node pointer to MutualSenseData variable which will contain the TOT MS initialization data
-* @return OK if success or an error code which specify the type of error encountered
-*/
+ * Read TOT MS Initialization data for each node from the buffer
+ * @param address a variable which contain the address from where to read the data
+ * @param node pointer to MutualSenseData variable which will contain the TOT MS initialization data
+ * @return OK if success or an error code which specify the type of error encountered
+ */
 int readTotMutualSenseNodeData(u64 address, TotMutualSenseData *node)
 {
 	int ret, i;
@@ -492,13 +482,13 @@ int readTotMutualSenseNodeData(u64 address, TotMutualSenseData *node)
 	int toRead = size * sizeof(u16);
 	u8 *data;
 
-	logError(0, "%s Address for Node data = %04X \n", tag, address);
-	data = kzalloc(toRead * sizeof(u16), GFP_KERNEL);
+	logError(0, "%s Address for Node data = %04X\n", tag, address);
+	data = kcalloc(toRead, sizeof(u16), GFP_KERNEL);
 	if (data == NULL) {
 		logError(1, "%s %s no memory\n", tag, __func__);
 		return ERROR_ALLOC;
 	}
-	node->node_data = (short *)kmalloc(size * (sizeof(short)), GFP_KERNEL);
+	node->node_data = kmalloc(size * (sizeof(short)), GFP_KERNEL);
 
 	if (node->node_data == NULL) {
 		logError(1, "%s %s: can not allocate node_data... ERROR %08X",
@@ -508,14 +498,13 @@ int readTotMutualSenseNodeData(u64 address, TotMutualSenseData *node)
 		return ERROR_ALLOC;
 	}
 
-	logError(0, "%s Node Data to read %d bytes \n", tag, size);
+	logError(0, "%s Node Data to read %d bytes\n", tag, size);
 
-	ret =
-	    fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, address, data,
-			      toRead, DUMMY_FRAMEBUFFER);
+	ret = fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, address, data,
+				toRead, DUMMY_FRAMEBUFFER);
 	if (ret < OK) {
 		logError(1,
-			 "%s %s: error while reading node data ERROR %08X \n",
+			 "%s %s: error while reading node data ERROR %08X\n",
 			 tag, __func__, ret);
 		kfree(node->node_data);
 		node->node_data = NULL;
@@ -525,12 +514,10 @@ int readTotMutualSenseNodeData(u64 address, TotMutualSenseData *node)
 	}
 	node->node_data_size = size;
 
-	for (i = 0; i < size; i++) {
-		node->node_data[i] =
-		    ((short)data[i * 2 + 1]) << 8 | data[i * 2];
-	}
+	for (i = 0; i < size; i++)
+		node->node_data[i] = ((short)data[i * 2 + 1]) << 8 | data[i * 2];
 
-	logError(0, "%s Read node data OK! \n", tag);
+	logError(0, "%s Read node data OK!\n", tag);
 	kfree(data);
 	data = NULL;
 
@@ -539,15 +526,16 @@ int readTotMutualSenseNodeData(u64 address, TotMutualSenseData *node)
 }
 
 /**
-* Perform all the steps to read the necessary info for TOT MS Initialization data from the buffer and store it in a TotMutualSenseData variable
-* @param type type of TOT MS Initialization data to read @link load_opt Load Host Data Option @endlink
-* @param data pointer to a variable which will contain the TOT MS initialization data
-* @return OK if success or an error code which specify the type of error encountered
-*/
+ * Perform all the steps to read the necessary info for TOT MS Initialization data from the buffer and store it in a TotMutualSenseData variable
+ * @param type of TOT MS Initialization data to read @link load_opt Load Host Data Option @endlink
+ * @param data pointer to a variable which will contain the TOT MS initialization data
+ * @return OK if success or an error code which specify the type of error encountered
+ */
 int readTotMutualSenseCompensationData(u8 type, TotMutualSenseData *data)
 {
 	int ret;
 	u64 address;
+
 	data->node_data = NULL;
 
 	if (!
@@ -577,7 +565,7 @@ int readTotMutualSenseCompensationData(u8 type, TotMutualSenseData *data)
 
 	ret = readTotMutualSenseGlobalData(&address, data);
 	if (ret < 0) {
-		logError(1, "%s %s: ERROR %08X \n", tag, __func__,
+		logError(1, "%s %s: ERROR %08X\n", tag, __func__,
 			 ERROR_COMP_DATA_GLOBAL);
 		return (ret | ERROR_COMP_DATA_GLOBAL);
 	}
@@ -594,23 +582,22 @@ int readTotMutualSenseCompensationData(u8 type, TotMutualSenseData *data)
 }
 
 /**
-* Read TOT SS Global Initialization data from the buffer such as number of force and sense channels
-* @param address pointer to a variable which contain the address from where to read the data and will contain the updated address to the next data
-* @param global pointer to a variable which will contain the TOT SS initialization data
-* @return OK if success or an error code which specify the type of error encountered
-*/
+ * Read TOT SS Global Initialization data from the buffer such as number of force and sense channels
+ * @param address pointer to a variable which contain the address from where to read the data and will contain the updated address to the next data
+ * @param global pointer to a variable which will contain the TOT SS initialization data
+ * @return OK if success or an error code which specify the type of error encountered
+ */
 int readTotSelfSenseGlobalData(u64 *address, TotSelfSenseData *global)
 {
 	int ret;
 	u8 data[COMP_DATA_GLOBAL];
 
-	logError(0, "%s Address for Global data= %04X \n", tag, *address);
-	ret =
-	    fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, *address, data,
-			      COMP_DATA_GLOBAL, DUMMY_FRAMEBUFFER);
+	logError(0, "%s Address for Global data= %04X\n", tag, *address);
+	ret = fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, *address, data,
+				COMP_DATA_GLOBAL, DUMMY_FRAMEBUFFER);
 	if (ret < OK) {
 		logError(1,
-			 "%s %s: error while reading the data... ERROR %08X \n",
+			 "%s %s: error while reading the data... ERROR %08X\n",
 			 tag, __func__, ret);
 		return ret;
 	}
@@ -620,7 +607,7 @@ int readTotSelfSenseGlobalData(u64 *address, TotSelfSenseData *global)
 	global->header.force_node = data[0];
 	global->header.sense_node = data[1];
 
-	logError(0, "%s force_len = %d sense_len = %d  \n", tag,
+	logError(0, "%s force_len = %d sense_len = %d\n", tag,
 		 global->header.force_node, global->header.sense_node);
 
 	*address += COMP_DATA_GLOBAL;
@@ -630,11 +617,11 @@ int readTotSelfSenseGlobalData(u64 *address, TotSelfSenseData *global)
 }
 
 /**
-* Read TOT SS Global Initialization data from the buffer such as number of force and sense channels
-* @param address pointer to a variable which contain the address from where to read the data and will contain the updated address to the next data
-* @param node pointer to a variable which will contain the TOT SS initialization data
-* @return OK if success or an error code which specify the type of error encountered
-*/
+ * Read TOT SS Global Initialization data from the buffer such as number of force and sense channels
+ * @param address pointer to a variable which contain the address from where to read the data and will contain the updated address to the next data
+ * @param node pointer to a variable which will contain the TOT SS initialization data
+ * @return OK if success or an error code which specify the type of error encountered
+ */
 int readTotSelfSenseNodeData(u64 address, TotSelfSenseData *node)
 {
 
@@ -643,9 +630,8 @@ int readTotSelfSenseNodeData(u64 address, TotSelfSenseData *node)
 	u8 data[(TXNODE_MAX * 2 + RXNODE_MAX * 2) * 2];
 	int ret, i, j = 0;
 
-	node->ix_fm =
-	    (u16 *) kmalloc(node->header.force_node * (sizeof(u16)),
-			    GFP_KERNEL);
+	node->ix_fm = kmalloc(node->header.force_node * (sizeof(u16)),
+				      GFP_KERNEL);
 	if (node->ix_fm == NULL) {
 		logError(1,
 			 "%s %s: can not allocate memory for ix2_fm... ERROR %08X",
@@ -653,9 +639,8 @@ int readTotSelfSenseNodeData(u64 address, TotSelfSenseData *node)
 		return ERROR_ALLOC;
 	}
 
-	node->cx_fm =
-	    (short *)kmalloc(node->header.force_node * (sizeof(short)),
-			     GFP_KERNEL);
+	node->cx_fm = kmalloc(node->header.force_node * (sizeof(short)),
+				       GFP_KERNEL);
 	if (node->cx_fm == NULL) {
 		logError(1,
 			 "%s %s: can not allocate memory for cx2_fm ... ERROR %08X",
@@ -663,9 +648,8 @@ int readTotSelfSenseNodeData(u64 address, TotSelfSenseData *node)
 		kfree(node->ix_fm);
 		return ERROR_ALLOC;
 	}
-	node->ix_sn =
-	    (u16 *) kmalloc(node->header.sense_node * (sizeof(u16)),
-			    GFP_KERNEL);
+	node->ix_sn = kmalloc(node->header.sense_node * (sizeof(u16)),
+				      GFP_KERNEL);
 	if (node->ix_sn == NULL) {
 		logError(1,
 			 "%s %s: can not allocate memory for ix2_sn ERROR %08X",
@@ -674,9 +658,8 @@ int readTotSelfSenseNodeData(u64 address, TotSelfSenseData *node)
 		kfree(node->cx_fm);
 		return ERROR_ALLOC;
 	}
-	node->cx_sn =
-	    (short *)kmalloc(node->header.sense_node * (sizeof(short)),
-			     GFP_KERNEL);
+	node->cx_sn = kmalloc(node->header.sense_node * (sizeof(short)),
+				       GFP_KERNEL);
 	if (node->cx_sn == NULL) {
 		logError(1,
 			 "%s %s: can not allocate memory for cx2_sn ERROR %08X",
@@ -687,13 +670,12 @@ int readTotSelfSenseNodeData(u64 address, TotSelfSenseData *node)
 		return ERROR_ALLOC;
 	}
 
-	logError(0, "%s Address for Node data = %02X \n", tag, address);
+	logError(0, "%s Address for Node data = %02X\n", tag, address);
 
-	logError(0, "%s Node Data to read %d bytes \n", tag, size);
+	logError(0, "%s Node Data to read %d bytes\n", tag, size);
 
-	ret =
-	    fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, address, data,
-			      toRead, DUMMY_FRAMEBUFFER);
+	ret = fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, address, data,
+				toRead, DUMMY_FRAMEBUFFER);
 	if (ret < OK) {
 		logError(1, "%s %s: error while reading data... ERROR %08X\n",
 			 tag, ret);
@@ -704,7 +686,7 @@ int readTotSelfSenseNodeData(u64 address, TotSelfSenseData *node)
 		return ret;
 	}
 
-	logError(0, "%s Read node data ok! \n", tag);
+	logError(0, "%s Read node data ok!\n", tag);
 
 	j = 0;
 	for (i = 0; i < node->header.force_node; i++) {
@@ -728,7 +710,7 @@ int readTotSelfSenseNodeData(u64 address, TotSelfSenseData *node)
 	}
 
 	if (j != toRead) {
-		logError(1, "%s %s: parsed a wrong number of bytes %d!=%d \n",
+		logError(1, "%s %s: parsed a wrong number of bytes %d!=%d\n",
 			 tag, __func__, j, toRead);
 	}
 
@@ -737,11 +719,11 @@ int readTotSelfSenseNodeData(u64 address, TotSelfSenseData *node)
 }
 
 /**
-* Perform all the steps to read the necessary info for TOT SS Initialization data from the buffer and store it in a TotSelfSenseData variable
-* @param type type of TOT MS Initialization data to read @link load_opt Load Host Data Option @endlink
-* @param data pointer to a variable which will contain the TOT MS initialization data
-* @return OK if success or an error code which specify the type of error encountered
-*/
+ * Perform all the steps to read the necessary info for TOT SS Initialization data from the buffer and store it in a TotSelfSenseData variable
+ * @param type of TOT MS Initialization data to read @link load_opt Load Host Data Option @endlink
+ * @param data pointer to a variable which will contain the TOT MS initialization data
+ * @return OK if success or an error code which specify the type of error encountered
+ */
 int readTotSelfSenseCompensationData(u8 type, TotSelfSenseData *data)
 {
 
