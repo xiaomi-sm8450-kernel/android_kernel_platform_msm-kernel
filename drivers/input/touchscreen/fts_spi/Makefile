@@ -1,5 +1,5 @@
 ifneq ($(KERNELRELEASE),)
-    obj-$(CONFIG_TOUCHSCREEN_ST_FTS_V521_SPI) := fts_touch_spi.o
+    obj-$(CONFIG_TOUCHSCREEN_ST_FTS_V521_SPI_L12A) := fts_touch_spi.o
     fts_touch_spi-y := fts_lib/ftsCompensation.o \
 			fts_lib/ftsCore.o \
 			fts_lib/ftsError.o \

@@ -773,7 +773,7 @@ int fts_writeReadU8UX(u8 cmd, AddrSize addrSize, u64 address, u8 *outBuf,
  * @param hasDummyByte  if the first byte of each reading is dummy (must be skipped) set to 1, otherwise if it is valid set to 0 (or any other value)
  * @return OK if success or an error code which specify the type of error encountered
  */
- #ifndef I2C_INTERFACE
+#ifndef I2C_INTERFACE
 int fts_writeReadU8UX_fast(u8 cmd, u8 *outBuf, u8 byteToRead, int hasDummyByte)
 {
 	u8 *finalCmd = buf1;

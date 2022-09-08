@@ -57,7 +57,7 @@
 #define SPI4_WIRE				/* /< comment if the master is SPI3 wires (MOSI and MISO share same line) */
 #define SPI_DELAY_CS				0	/* /< time in usec to wait before rising the CS */
 #if IS_ENABLED(CONFIG_SPI_MT65XX)
-#define SPI_CLOCK_FREQ				12000000	/* /< clock frequency in Hz of the SPI bus */
+#define SPI_CLOCK_FREQ				7000000	/* /< clock frequency in Hz of the SPI bus */
 #else
 #define SPI_CLOCK_FREQ				1000000	/* /< clock frequency in Hz of the SPI bus */
 #endif
