@@ -39,8 +39,6 @@
 #include "fts_lib/ftsSoftware.h"
 #include "fts_lib/ftsHardware.h"
 #include <linux/completion.h>
-#include <linux/pm_qos.h>
-
 
 /****************** CONFIGURATION SECTION ******************/
 /** @defgroup conf_section	 Driver Configuration Section
@@ -61,8 +59,6 @@
 #define PINCTRL_DVDD_ENABLE			"pmx_ts_dvdd_enable"
 #define PINCTRL_DVDD_DISABLE			"pmx_ts_dvdd_disable"
 
-#define PINCTRL_AVDD_ENABLE			"pmx_ts_avdd_enable"
-#define PINCTRL_AVDD_DISABLE			"pmx_ts_avdd_disable"
 
 /*** save power mode ***/
 #define FTS_POWER_SAVE_MODE
@@ -119,7 +115,7 @@
 
 #define STYLUS_MODE
 
-/* #define DEBUG_STABILITY_ENABLE */
+
 
 /**** END ****/
 
@@ -378,9 +374,6 @@ struct fts_ts_info {
 	int policy_num;
 	bool thread_priority_high;
 
-	struct pm_qos_request fts_qos_request;
-	struct delayed_work qos_work;
-
 #ifndef FW_UPDATE_ON_PROBE
 	struct delayed_work fwu_work;
 	struct workqueue_struct *fwu_workqueue;
@@ -393,7 +386,6 @@ struct fts_ts_info {
 	unsigned long touch_id;
 	unsigned long touch_new_event_id;
 	int skip_count[TOUCH_ID_MAX];
-	unsigned long last_id;
 	unsigned long sleep_finger;
 	unsigned long touch_skip;
 #ifdef STYLUS_MODE
@@ -416,15 +408,13 @@ struct fts_ts_info {
 	struct pinctrl_state *pinctrl_state_spimode;
 	struct pinctrl_state *pinctrl_dvdd_enable;
 	struct pinctrl_state *pinctrl_dvdd_disable;
-	struct pinctrl_state *pinctrl_avdd_enable;
-	struct pinctrl_state *pinctrl_avdd_disable;
 	u8 lockdown_info[FTS_LOCKDOWN_SIZE];
 	int result_type;
 	struct proc_dir_entry *tp_selftest_proc;
 	struct proc_dir_entry *tp_data_dump_proc;
 	struct proc_dir_entry *tp_fw_version_proc;
 	struct proc_dir_entry *tp_lockdown_info_proc;
-	struct proc_dir_entry *tp_always_active_proc;
+
 	/* input lock */
 	struct mutex input_report_mutex;
 	int gesture_enabled;
