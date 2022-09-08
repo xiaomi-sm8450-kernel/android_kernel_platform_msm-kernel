@@ -115,7 +115,7 @@
 
 #define STYLUS_MODE
 
-/* #define DEBUG_STABILITY_ENABLE */
+
 
 /**** END ****/
 
@@ -189,6 +189,8 @@ do {\
 #define GRIP_RECT_NUM 12
 #define GRIP_PARAMETER_NUM 8
 #define EXPERT_ARRAY_SIZE 3
+
+#define CPU_MASK_SIZE 8
 
 #define CONFIG_FTS_POWERSUPPLY_CB
 enum charge_status {
@@ -355,6 +357,21 @@ struct fts_ts_info {
 	struct work_struct selftest_work;
 	wait_queue_head_t selftest_wait_queue;
 	bool selftest_ready;
+
+	bool boost_support;
+	bool cpu_masked;
+	bool boost_active;
+	int *target_freq;
+	int *normal_target_freq;
+	int *game_target_freq;
+	struct cpumask *tp_cpumask;
+	struct cpumask normal_cpumask;
+	struct cpumask game_cpumask;
+	struct freq_qos_request *tchbst_rq;
+	int *boost_num;
+	int normal_boost_num;
+	int game_boost_num;
+	int policy_num;
 	bool thread_priority_high;
 
 #ifndef FW_UPDATE_ON_PROBE
@@ -367,6 +384,8 @@ struct fts_ts_info {
 
 	unsigned int mode;
 	unsigned long touch_id;
+	unsigned long touch_new_event_id;
+	int skip_count[TOUCH_ID_MAX];
 	unsigned long sleep_finger;
 	unsigned long touch_skip;
 #ifdef STYLUS_MODE

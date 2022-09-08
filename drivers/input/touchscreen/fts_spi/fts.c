@@ -80,7 +80,13 @@
 #include <linux/power_supply.h>
 #include <linux/rtc.h>
 #include <linux/time.h>
+#include <linux/cpufreq.h>
+#include <linux/pm_qos.h>
 #include <uapi/linux/sched/types.h>
+#include <linux/cpu.h>
+#include <linux/sched.h>
+
+
 
 #ifdef FTS_XIAOMI_TOUCHFEATURE
 #include "../xiaomi/xiaomi_touch.h"
@@ -161,9 +167,7 @@ static int fts_mode_handler(struct fts_ts_info *info, int force);
 static int fts_set_cur_value(int mode, int value);
 #endif
 extern int power_supply_is_system_supplied(void);
-#ifdef CONFIG_FTS_BOOST
-extern void touch_irq_boost(void);
-#endif
+
 #ifdef CONFIG_FTS_BOOST
 #define EVENT_INPUT 0x1
 extern void lpm_disable_for_dev(bool on, char event_dev);
@@ -177,6 +181,225 @@ void fts_sched_sethigh(struct task_struct *p)
 	struct sched_param sp = { .sched_priority = MAX_RT_PRIO - 1 };
 	WARN_ON_ONCE(sched_setscheduler_nocheck(p, SCHED_FIFO, &sp) != 0);
 }
+
+void fts_set_cpumask(unsigned int value, struct cpumask *mask)
+{
+	int i;
+
+	cpumask_clear(mask);
+	for (i = 0; i < CPU_MASK_SIZE; i++)
+		if (value & (1 << i))
+			cpumask_set_cpu(i, mask);
+}
+
+void init_touch_irq_boost(struct fts_ts_info *info, struct device_node *dp)
+{
+	unsigned int cpu;
+	int num = 0;
+	int rc;
+	struct cpufreq_policy *policy;
+
+	info->boost_support = of_property_read_bool(dp, "boost_support");
+
+	if (!info->boost_support) {
+		logError(1, "%s:%s, not support boost", tag, __func__);
+		return;
+	}
+
+	rc = of_property_read_u32(dp, "normal_cpumask", &cpu);
+	if (rc || cpu  == 0) {
+		cpumask_setall(&info->normal_cpumask);
+		logError(1, "%s:%s, no normal_cpumask or zero", tag, __func__);
+	} else {
+		fts_set_cpumask(cpu, &info->normal_cpumask);
+	}
+
+	rc = of_property_read_u32(dp, "game_cpumask", &cpu);
+	if (rc || cpu  == 0) {
+		cpumask_setall(&info->game_cpumask);
+		logError(1, "%s:%s, no game_cpumask or zero", tag, __func__);
+	} else {
+		fts_set_cpumask(cpu, &info->game_cpumask);
+	}
+
+	/* query policy number */
+	for_each_possible_cpu(cpu) {
+		policy = cpufreq_cpu_get(cpu);
+
+		if (policy) {
+			logError(1, "%s:%s, policy[%d]: first:%d, min:%d, max:%d",
+				tag, __func__, num, cpu, policy->min, policy->max);
+
+			num++;
+			cpu = cpumask_last(policy->related_cpus);
+			cpufreq_cpu_put(policy);
+		}
+	}
+
+	if (num == 0) {
+		info->boost_support = false;
+		logError(1, "%s:%s, no policy", tag, __func__);
+		return;
+	}
+
+	rc = of_property_count_u32_elems(dp, "irq_boost_target");
+	if (rc > 0) {
+		info->normal_boost_num = rc;
+		if (info->normal_boost_num > num)
+			info->normal_boost_num = num;
+		info->normal_target_freq = kcalloc(info->normal_boost_num, sizeof(int), GFP_KERNEL);
+		if (info->normal_target_freq) {
+			rc = of_property_read_u32_array(dp, "irq_boost_target",
+							info->normal_target_freq,
+							info->normal_boost_num);
+		        if (rc) {
+				memset(info->normal_target_freq, 0,
+					info->normal_boost_num * sizeof(int));
+		        }
+		} else {
+			info->normal_boost_num = 0;
+			logError(1, "%s:%s, kcalloc normal mem fail", tag, __func__);
+		}
+	} else {
+		logError(1, "%s:%s, no need normal boost", tag, __func__);
+	}
+
+	rc = of_property_count_u32_elems(dp, "game_irq_boost_target");
+	if (rc > 0) {
+		info->game_boost_num = rc;
+		if (info->game_boost_num > num)
+			info->game_boost_num = num;
+		info->game_target_freq = kcalloc(info->game_boost_num, sizeof(int), GFP_KERNEL);
+		if (info->game_target_freq) {
+			rc = of_property_read_u32_array(dp, "game_irq_boost_target",
+							info->game_target_freq,
+							info->game_boost_num);
+		        if (rc) {
+				memset(info->game_target_freq, 0,
+					info->game_boost_num * sizeof(int));
+		        }
+		} else {
+			info->game_boost_num = 0;
+			logError(1, "%s:%s, kcalloc game mem fail", tag, __func__);
+		}
+	} else {
+		logError(1, "%s:%s, no need game boost", tag, __func__);
+	}
+
+	num = info->normal_boost_num;
+	if (num < info->game_boost_num)
+		num = info->game_boost_num;
+
+	info->policy_num = num;
+	if (!info->policy_num) {
+		logError(1, "%s:%s, policy_num is 0, disable boost_support", tag, __func__);
+		info->boost_support = false;
+		kfree(info->normal_target_freq);
+		info->normal_target_freq = NULL;
+		kfree(info->game_target_freq);
+		info->game_target_freq = NULL;
+		return;
+	}
+	info->tchbst_rq = kcalloc(info->policy_num, sizeof(struct freq_qos_request), GFP_KERNEL);
+	if (!info->tchbst_rq) {
+		logError(1, "%s:%s, qos kcalloc fail, disable boost_support", tag, __func__);
+		info->boost_support = false;
+		kfree(info->normal_target_freq);
+		info->normal_target_freq = NULL;
+		kfree(info->game_target_freq);
+		info->game_target_freq = NULL;
+		return;
+	}
+	num = 0;
+	for_each_possible_cpu(cpu) {
+		if (num >= info->policy_num)
+			break;
+
+		policy = cpufreq_cpu_get(cpu);
+
+		if (!policy)
+			continue;
+		/* freq QoS */
+		freq_qos_add_request(&policy->constraints, &(info->tchbst_rq[num]), FREQ_QOS_MIN, 0);
+
+		num++;
+		cpu = cpumask_last(policy->related_cpus);
+		cpufreq_cpu_put(policy);
+	}
+	info->tp_cpumask = &info->normal_cpumask;
+	info->boost_num = &info->normal_boost_num;
+	info->target_freq = info->normal_target_freq;
+	logError(1, "%s:%s, normal boost num %d, game boost num %d",
+		 tag, __func__, info->normal_boost_num, info->game_boost_num);
+}
+
+void touch_irq_boost_switch(struct fts_ts_info *info)
+{
+	if (!info->boost_support)
+		return;
+
+	if (info->gamemode_enable) {
+		info->tp_cpumask = &info->game_cpumask;
+		info->boost_num = &info->game_boost_num;
+		info->target_freq = info->game_target_freq;
+		info->cpu_masked = false;
+	} else {
+		info->tp_cpumask = &info->normal_cpumask;
+		info->boost_num = &info->normal_boost_num;
+		info->target_freq = info->normal_target_freq;
+		info->cpu_masked = false;
+	}
+}
+
+void remove_touch_irq_boost(struct fts_ts_info *info)
+{
+	int i;
+
+	if (!info->boost_support)
+		return;
+
+	for (i = 0; i < info->policy_num; i++) {
+		freq_qos_remove_request(&(info->tchbst_rq[i]));
+	}
+
+	kfree(info->normal_target_freq);
+	kfree(info->game_target_freq);
+	kfree(info->tchbst_rq);
+}
+
+void touch_irq_boost(struct fts_ts_info *info)
+{
+	int i;
+
+	if (!info->boost_support)
+		return;
+
+	if (!info->cpu_masked) {
+		set_cpus_allowed_ptr(current, info->tp_cpumask);
+		info->cpu_masked = true;
+	}
+
+	if (!info->boost_active)  {
+		info->boost_active = true;
+		for (i = 0; i < *info->boost_num; i++)
+			freq_qos_update_request(&(info->tchbst_rq[i]), info->target_freq[i]);
+	}
+}
+
+void touch_irq_boost_release(struct fts_ts_info *info)
+{
+	int i;
+
+	if (!info->boost_support)
+		return;
+
+	if (info->boost_active) {
+		info->boost_active = false;
+		for (i = 0; i < info->policy_num; i++)
+			freq_qos_update_request(&(info->tchbst_rq[i]), 0);
+	}
+}
+
 
 #ifdef FTS_FOD_AREA_REPORT
 extern int mi_disp_set_fod_queue_work(u32 fod_btn, bool from_touch);
@@ -211,6 +434,7 @@ void release_all_touches(struct fts_ts_info *info)
 		input_mt_report_slot_state(info->input_dev, type, 0);
 		last_touch_events_collect(i, 0);
 		info->last_x[i] = info->last_y[i] = 0;
+		info->skip_count[i] = 0;
 	}
 	input_report_key(info->input_dev, BTN_TOUCH, 0);
 	input_sync(info->input_dev);
@@ -222,6 +446,7 @@ void release_all_touches(struct fts_ts_info *info)
 #ifdef CONFIG_FTS_BOOST
 	lpm_disable_for_dev(false, EVENT_INPUT);
 #endif
+	touch_irq_boost_release(info);
 	info->touch_id = 0;
 	info->touch_skip = 0;
 	info->fod_id = 0;
@@ -1226,9 +1451,10 @@ static ssize_t stm_fts_cmd_store(struct device *dev,
 {
 	int n;
 	char *p = (char *)buf;
-	logError(1, "%s:%s----tp selftest echo cmd----\n", tag, __func__);
+
 	memset(typeOfComand, 0, CMD_STR_LEN * sizeof(u32));
 
+	logError(1, "%s\n", tag);
 	for (n = 0; n < (count + 1) / 3; n++) {
 		sscanf(p, "%02X ", &typeOfComand[n]);
 		p += 3;
@@ -1259,7 +1485,6 @@ static ssize_t stm_fts_cmd_show(struct device *dev,
 	MutualSenseFrame frameMS;
 	SelfSenseFrame frameSS;
 
-	logError(1, "%s:%s----tp selftest start----\n", tag, __func__);
 	limit_file_name = fts_get_limit(info);
 
 	if (numberParameters >= 1) {
@@ -1279,7 +1504,7 @@ static ssize_t stm_fts_cmd_show(struct device *dev,
 			goto END;
 		}
 #endif
-		logError(1, "%s:%s:cmd type = %d\n", tag, __func__, typeOfComand[0]);
+
 		switch (typeOfComand[0]) {
 		/*ITO TEST */
 		case 0x01:
@@ -1287,6 +1512,7 @@ static ssize_t stm_fts_cmd_show(struct device *dev,
 			break;
 		/*PRODUCTION TEST */
 		case 0x00:
+
 			if (systemInfo.u8_cfgAfeVer != systemInfo.u8_cxAfeVer) {
 				res = ERROR_OP_NOT_ALLOW;
 				logError(0,
@@ -3786,12 +4012,14 @@ static void fts_enter_pointer_event_handler(struct fts_ts_info *info,
 		tool = MT_TOOL_FINGER;
 		touch_condition = 1;
 		__set_bit(touchId, &info->touch_id);
+		__set_bit(touchId, &info->touch_new_event_id);
 		break;
 
 	case TOUCH_TYPE_HOVER:
 		tool = MT_TOOL_FINGER;
 		touch_condition = 0;
 		__set_bit(touchId, &info->touch_id);
+		__set_bit(touchId, &info->touch_new_event_id);
 		distance = DISTANCE_MAX;
 		break;
 
@@ -4597,6 +4825,42 @@ static void fts_user_report_event_handler(struct fts_ts_info *info,
 
 }
 
+static void fts_touch_forced_up_check(struct fts_ts_info *info)
+{
+	int i;
+	unsigned int type;
+
+	if (!info->touch_id || !info->touch_new_event_id)
+		return;
+
+	for (i = 0; i < TOUCH_ID_MAX; i++) {
+		if (test_bit(i, &info->touch_id)) {
+			if (!test_bit(i, &info->touch_new_event_id)) {
+				info->skip_count[i]++;
+				if (info->skip_count[i] > 20) {
+#ifdef STYLUS_MODE
+					if (test_bit(i, &info->stylus_id))
+						type = MT_TOOL_PEN;
+					else
+						type = MT_TOOL_FINGER;
+#endif
+					input_mt_slot(info->input_dev, i);
+					input_mt_report_slot_state(info->input_dev, type, 0);
+					last_touch_events_collect(i, 0);
+					info->last_x[i] = 0;
+					info->last_y[i] = 0;
+					__clear_bit(i, &info->touch_id);
+					logError(1, "%s Id (%d) skip %d,force up",
+						tag, i, info->skip_count[i]);
+					info->skip_count[i] = 0;
+				}
+			} else {
+				info->skip_count[i] = 0;
+			}
+		}
+	}
+}
+
 static void fts_ts_sleep_work(struct work_struct *work)
 {
 	struct fts_ts_info *info = container_of(work, struct fts_ts_info, sleep_work);
@@ -4628,6 +4892,7 @@ static void fts_ts_sleep_work(struct work_struct *work)
 	}
 
 	info->irq_status = true;
+	info->touch_new_event_id = 0;
 	error = fts_writeReadU8UX(regAdd, 0, 0, data, FIFO_EVENT_SIZE,
 				  DUMMY_FIFO);
 	events_remaining = data[EVENTS_REMAINING_POS] & EVENTS_REMAINING_MASK;
@@ -4668,6 +4933,7 @@ static void fts_ts_sleep_work(struct work_struct *work)
 			}
 		}
 	}
+	fts_touch_forced_up_check(info);
 	input_sync(info->input_dev);
 	info->irq_status = false;
 #ifdef FTS_XIAOMI_TOUCHFEATURE
@@ -4685,11 +4951,6 @@ static void fts_ts_sleep_work(struct work_struct *work)
  * This handler is called each time there is at least one new event in the FIFO and the interrupt pin of the IC goes low.
  * It will read all the events from the FIFO and dispatch them to the proper event handler according the event ID
  */
-#ifdef DEBUG_STABILITY_ENABLE
-static uint64_t spi_trans_start_time,spi_trans_write_end_time;
-/* static uint64_t read_start_time,read_end_time; */
-#endif
-
 static irqreturn_t fts_event_handler(int irq, void *ts_info)
 {
 	struct fts_ts_info *info = ts_info;
@@ -4704,9 +4965,6 @@ static irqreturn_t fts_event_handler(int irq, void *ts_info)
 	static char pre_id[3];
 	event_dispatch_handler_t event_handler;
 
-#ifdef CONFIG_FTS_BOOST
-	touch_irq_boost();
-#endif
 	if (info->tp_pm_suspend) {
 		logError(1, "%s device in suspend, schedue to work", tag);
 		pm_wakeup_event(info->dev, 0);
@@ -4724,29 +4982,23 @@ static irqreturn_t fts_event_handler(int irq, void *ts_info)
 #ifdef CONFIG_FTS_BOOST
 	lpm_disable_for_dev(true, EVENT_INPUT);
 #endif
+	touch_irq_boost(info);
 	pm_stay_awake(info->dev);
 
 	info->irq_status = true;
 
-#ifdef DEBUG_STABILITY_ENABLE
-	spi_trans_start_time = ktime_get_boottime_ns();
-#endif
+	info->touch_new_event_id = 0;
 
 #ifdef I2C_INTERFACE
 	error = fts_writeReadU8UX(regAdd, 0, 0, data, FIFO_EVENT_SIZE,
-					DUMMY_FIFO);
+				  DUMMY_FIFO);
 #else
 	error = fts_writeReadU8UX_fast(regAdd, data, FIFO_EVENT_SIZE,
-					DUMMY_FIFO);
+				       DUMMY_FIFO);
 #endif
-
-#ifdef DEBUG_STABILITY_ENABLE
-	spi_trans_write_end_time = ktime_get_boottime_ns();
-	if((spi_trans_write_end_time - spi_trans_start_time) > 500000)
-		logError(1, "FTS_SPI_TRANS_TIME = %d\n", spi_trans_write_end_time - spi_trans_start_time);
-#endif
-
 	events_remaining = data[EVENTS_REMAINING_POS] & EVENTS_REMAINING_MASK;
+	if (events_remaining >= FIFO_DEPTH - 1)
+		logError(1, "%s events_remaining too more %d", tag, events_remaining);
 	events_remaining = (events_remaining > FIFO_DEPTH - 1) ?
 			   FIFO_DEPTH - 1 : events_remaining;
 
@@ -4754,12 +5006,12 @@ static irqreturn_t fts_event_handler(int irq, void *ts_info)
 	if (error == OK && events_remaining > 0) {
 #ifdef I2C_INTERFACE
 		error = fts_writeReadU8UX(regAdd, 0, 0, &data[FIFO_EVENT_SIZE],
-						FIFO_EVENT_SIZE * events_remaining,
-						DUMMY_FIFO);
+					  FIFO_EVENT_SIZE * events_remaining,
+					  DUMMY_FIFO);
 #else
 		error = fts_writeReadU8UX_fast(regAdd, &data[FIFO_EVENT_SIZE],
-						FIFO_EVENT_SIZE * events_remaining,
-						DUMMY_FIFO);
+					       FIFO_EVENT_SIZE * events_remaining,
+					       DUMMY_FIFO);
 #endif
 	}
 	if (error != OK) {
@@ -4790,15 +5042,15 @@ static irqreturn_t fts_event_handler(int irq, void *ts_info)
 			}
 		}
 	}
+	fts_touch_forced_up_check(info);
 	input_sync(info->input_dev);
 #ifdef TOUCH_THP_SUPPORT
 end:
 #endif
 	info->irq_status = false;
-#ifdef CONFIG_FTS_BOOST
+
 	if (!info->touch_id)
-		lpm_disable_for_dev(false, EVENT_INPUT);
-#endif
+		touch_irq_boost_release(info);
 
 	if (!info->thread_priority_high) {
 		fts_sched_sethigh(current);
@@ -5712,6 +5964,7 @@ static void fts_update_enter_idle_time(void)
 		logError(1, "%s %s not in gamemode, set idle time to 3s\n", tag, __func__);
 		set_cmd[3] = 0x09;
 	}
+	touch_irq_boost_switch(fts_info);
 	ret = fts_write_dma_safe(set_cmd, sizeof(set_cmd) / sizeof(u8));
 	if (ret < OK)
 		logError(1,
@@ -7058,9 +7311,9 @@ static int fts_pinctrl_init(struct fts_ts_info *info)
 
 	if (IS_ERR_OR_NULL(info->pinctrl_dvdd_enable)) {
 		retval = PTR_ERR(info->pinctrl_dvdd_enable);
-		dev_dbg(info->dev, "Can not lookup %s pinstate %d\n",
-			PINCTRL_DVDD_ENABLE, retval);
-		goto err_pinctrl_lookup;
+		info->pinctrl_dvdd_enable = NULL;
+		logError(1, "%s: Can not lookup %s pinstate %d\n",
+			tag, PINCTRL_DVDD_ENABLE, retval);
 	}
 
 	info->pinctrl_dvdd_disable
@@ -7068,9 +7321,9 @@ static int fts_pinctrl_init(struct fts_ts_info *info)
 
 	if (IS_ERR_OR_NULL(info->pinctrl_dvdd_disable)) {
 		retval = PTR_ERR(info->pinctrl_dvdd_disable);
-		dev_dbg(info->dev, "Can not lookup %s pinstate %d\n",
-			PINCTRL_DVDD_DISABLE, retval);
-		goto err_pinctrl_lookup;
+		info->pinctrl_dvdd_disable = NULL;
+		logError(1, "%s: Can not lookup %s pinstate %d\n",
+			tag, PINCTRL_DVDD_DISABLE, retval);
 	}
 
 	return 0;
@@ -7444,15 +7697,16 @@ static int parse_dt(struct device *dev, struct fts_hw_platform_data *bdata)
 		logError(0, "%s pwr_reg_name = %s\n", tag, name);
 	}
 
-/* 	retval = of_property_read_string(np, "fts,bus-reg-name", &name);
+	retval = of_property_read_string(np, "fts,bus-reg-name", &name);
 	if (retval == -EINVAL)
 		bdata->vdd_reg_name = NULL;
-	else if (retval < 0)
-		return retval;
 	else {
+		if (retval < 0)
+			return retval;
+
 		bdata->vdd_reg_name = name;
 		logError(0, "%s bus_reg_name = %s\n", tag, name);
-	} */
+	}
 
 	if (of_property_read_bool(np, "fts,reset-gpio-enable")) {
 		bdata->reset_gpio = of_get_named_gpio_flags(np,
@@ -8265,13 +8519,6 @@ static int fts_probe(struct spi_device *client)
 				"%s: Failed to select %s pinstate %d\n",
 				__func__, PINCTRL_STATE_SPIMODE, error);
 		}
-
-		error = pinctrl_select_state(info->ts_pinctrl, info->pinctrl_dvdd_enable);
-		if (error < 0) {
-			dev_err(&client->dev,
-			"%s: Failed to select %s pinstate %d\n",
-			__func__, PINCTRL_DVDD_ENABLE, error);
-		}
 	} else {
 		dev_err(&client->dev, "%s: Failed to init pinctrl\n", __func__);
 		goto ProbeErrorExit_1;
@@ -8344,6 +8591,7 @@ static int fts_probe(struct spi_device *client)
 #ifdef FTS_XIAOMI_TOUCHFEATURE
 	init_waitqueue_head(&info->wait_queue);
 #endif
+	init_touch_irq_boost(info, dp);
 	logError(0, "%s SET Input Device Property:\n", tag);
 	info->dev = &info->client->dev;
 	info->input_dev = input_allocate_device();
@@ -8729,6 +8977,7 @@ ProbeErrorExit_5_1:
 		input_free_device(info->input_dev);
 
 ProbeErrorExit_5:
+	remove_touch_irq_boost(info);
 	destroy_workqueue(info->event_wq);
 	if (info->irq_wq) {
 		destroy_workqueue(info->irq_wq);
@@ -8797,6 +9046,7 @@ static int fts_remove(struct spi_device *client)
 	sysfs_remove_group(&client->dev.kobj, &info->attrs);
 	/* remove interrupt and event handlers */
 	fts_interrupt_uninstall(info);
+	remove_touch_irq_boost(info);
 #ifdef CONFIG_FTS_BL_CB
 	backlight_unregister_notifier(&info->bl_notifier);
 #endif
