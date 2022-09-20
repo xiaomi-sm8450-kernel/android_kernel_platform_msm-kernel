@@ -483,6 +483,7 @@ struct battery_chg_dev {
 	bool				block_tx;
 	bool				ship_mode_en;
 	bool				debug_battery_detected;
+	bool				wls_not_supported;
 	bool				wls_fw_update_reqd;
 	bool				debug_work_en;
 	u32				wls_fw_version;
