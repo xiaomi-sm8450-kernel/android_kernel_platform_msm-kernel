@@ -10,6 +10,25 @@
 };
 
 &apps_rsc {
+
+	rpmh-regulator-ldoi1 {
+		compatible = "qcom,rpmh-vrm-regulator";
+		qcom,resource-name = "ldoi1";
+		qcom,regulator-type = "pmic5-ldo";
+		qcom,supported-modes =
+			<RPMH_REGULATOR_MODE_LPM
+			 RPMH_REGULATOR_MODE_HPM>;
+		qcom,mode-threshold-currents = <0 30000>;
+		L1I: pm8010i_l1: regulator-pm8010i-l1 {
+			regulator-name = "pm8010i_l1";
+			qcom,set = <RPMH_REGULATOR_SET_ALL>;
+			regulator-min-microvolt = <480000>;
+			regulator-max-microvolt = <1104000>;
+			qcom,init-voltage = <1104000>;
+			qcom,init-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+	};
+
 	rpmh-regulator-ldoi2 {
 		compatible = "qcom,rpmh-vrm-regulator";
 		qcom,resource-name = "ldoi2";
@@ -21,9 +40,9 @@
 		L2I: pm8010i_l2: regulator-pm8010i-l2 {
 			regulator-name = "pm8010i_l2";
 			qcom,set = <RPMH_REGULATOR_SET_ALL>;
-			regulator-min-microvolt = <1056000>;
-			regulator-max-microvolt = <1056000>;
-			qcom,init-voltage = <1056000>;
+			regulator-min-microvolt = <952000>;
+			regulator-max-microvolt = <1500000>;
+			qcom,init-voltage = <1144000>;
 			qcom,init-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 	};
@@ -61,9 +80,9 @@
 		L6I: pm8010i_l6: regulator-pm8010i-l6 {
 			regulator-name = "pm8010i_l6";
 			qcom,set = <RPMH_REGULATOR_SET_ALL>;
-			regulator-min-microvolt = <2800000>;
-			regulator-max-microvolt = <2800000>;
-			qcom,init-voltage = <2800000>;
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			qcom,init-voltage = <1800000>;
 		};
 	};
 
@@ -109,9 +128,9 @@
 		L2J: pm8010j_l2: regulator-pm8010j-l2 {
 			regulator-name = "pm8010j_l2";
 			qcom,set = <RPMH_REGULATOR_SET_ALL>;
-			regulator-min-microvolt = <1056000>;
-			regulator-max-microvolt = <1056000>;
-			qcom,init-voltage = <1056000>;
+			regulator-min-microvolt = <952000>;
+			regulator-max-microvolt = <1500000>;
+			qcom,init-voltage = <1244000>;
 			qcom,init-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 	};
@@ -123,9 +142,9 @@
 		L3J: pm8010j_l3: regulator-pm8010j-l3 {
 			regulator-name = "pm8010j_l3";
 			qcom,set = <RPMH_REGULATOR_SET_ALL>;
-			regulator-min-microvolt = <1800000>;
-			regulator-max-microvolt = <1800000>;
-			qcom,init-voltage = <1800000>;
+			regulator-min-microvolt = <2800000>;
+			regulator-max-microvolt = <2904000>;
+			qcom,init-voltage = <2800000>;
 		};
 	};
 
@@ -136,9 +155,9 @@
 		L4J: pm8010j_l4: regulator-pm8010j-l4 {
 			regulator-name = "pm8010j_l4";
 			qcom,set = <RPMH_REGULATOR_SET_ALL>;
-			regulator-min-microvolt = <1800000>;
-			regulator-max-microvolt = <1800000>;
-			qcom,init-voltage = <1800000>;
+			regulator-min-microvolt = <2800000>;
+			regulator-max-microvolt = <2800000>;
+			qcom,init-voltage = <2800000>;
 		};
 	};
 
@@ -162,9 +181,9 @@
 		L6J: pm8010j_l6: regulator-pm8010j-l6 {
 			regulator-name = "pm8010j_l6";
 			qcom,set = <RPMH_REGULATOR_SET_ALL>;
-			regulator-min-microvolt = <2800000>;
-			regulator-max-microvolt = <2800000>;
-			qcom,init-voltage = <2800000>;
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			qcom,init-voltage = <1800000>;
 		};
 	};
 
@@ -234,13 +253,13 @@
 			trip1 {
 				temperature = <115000>;
 				hysteresis = <0>;
-				type = "critical";
+				type = "passive";
 			};
 
 			trip2 {
 				temperature = <145000>;
 				hysteresis = <0>;
-				type = "critical";
+				type = "passive";
 			};
 		};
 	};
@@ -261,13 +280,13 @@
 			trip1 {
 				temperature = <115000>;
 				hysteresis = <0>;
-				type = "critical";
+				type = "passive";
 			};
 
 			trip2 {
 				temperature = <145000>;
 				hysteresis = <0>;
-				type = "critical";
+				type = "passive";
 			};
 		};
 	};

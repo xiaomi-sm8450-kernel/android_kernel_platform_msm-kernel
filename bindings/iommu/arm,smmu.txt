@@ -13,6 +13,7 @@ conditions.
 
                         "arm,smmu-v1"
                         "arm,smmu-v2"
+                        "arm,smmu-pmu"
                         "arm,mmu-400"
                         "arm,mmu-401"
                         "arm,mmu-500"
@@ -130,6 +131,10 @@ conditions.
 		  Some hardware configurations may not be optimized for using
 		  a four level page table configuration. Set to use a three
 		  level page table instead.
+
+- qcom,context-fault-retry:
+		  Retry iommu faults after a tlb invalidate, if stall-on-fault
+		  is enabled.
 
 - qcom,no-asid-retention:
 		  Some hardware may lose internal state for asid after

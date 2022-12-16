@@ -72,6 +72,12 @@
 		gunyah-label = <3>;
 	};
 
+	gunyah-vsock {
+		compatible = "qcom,gunyah-vsock";
+		qcom,master;
+		msgq-label = <3>;
+	};
+
 	qcom,vm-config {
 		compatible = "qcom,vm-1.0";
 		vm-type = "aarch64-guest";
@@ -82,6 +88,12 @@
 		vendor = "Qualcomm";
 		image-name = "qcom,trustedvm";
 		qcom,pasid = <0x0 0x1c>;
+		qcom,qtee-config-info = "p=7C,8F,97,159,199,7F1;";
+		qcom,secdomain-ids = <45>;
+		qcom,primary-vm-index = <0>;
+		vm-uri = "qualcomm.com/vmuid/trusted-ui";
+		vm-guid = "3f4d154a-92d3-54d0-9241-08e34c8bc670";
+		qcom,sensitive;
 
 		iomemory-ranges = <0x0 0x92c000 0x0 0x92c000 0x0 0x4000 0x0
 				0x0 0xc400000 0x0 0xc400000 0x0 0x3000 0x1
@@ -170,6 +182,15 @@
 				queue-depth = <0x00000008>;
 				peer-default;
 				qcom,label = <0x0000002>;
+			};
+
+			gvsock-message-queue-pair {
+				vdevice-type = "message-queue-pair";
+				generate = "/hypervisor/gvsock-msgq-pair";
+				message-size = <0x000000f0>;
+				queue-depth = <0x00000008>;
+				peer = "vm-name:qcom,oemvm";
+				qcom,label = <0x0000003>;
 			};
 
 			qrtr-shm {

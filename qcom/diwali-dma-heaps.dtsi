@@ -11,6 +11,12 @@
 			qcom,token = <0x20000000>;
 		};
 
+		qcom,adsp {
+			qcom,dma-heap-name = "qcom,adsp";
+			qcom,dma-heap-type = <HEAP_TYPE_CMA>;
+			memory-region = <&sdsp_mem>;
+		};
+
 		qcom,user_contig {
 			qcom,dma-heap-name = "qcom,user-contig";
 			qcom,dma-heap-type = <HEAP_TYPE_CMA>;
@@ -27,6 +33,26 @@
 			qcom,dma-heap-name = "qcom,qseecom-ta";
 			qcom,dma-heap-type = <HEAP_TYPE_CMA>;
 			memory-region = <&qseecom_ta_mem>;
+		};
+
+		qcom,display {
+			qcom,dma-heap-name = "qcom,display";
+			qcom,dma-heap-type = <HEAP_TYPE_CMA>;
+			qcom,max-align = <9>;
+			memory-region = <&non_secure_display_memory>;
+		};
+
+		qcom,demura {
+			qcom,dma-heap-name = "qcom,demura";
+			qcom,dma-heap-type = <HEAP_TYPE_CMA>;
+			qcom,max-align = <9>;
+			memory-region = <&demura_heap_memory>;
+		};
+
+		qcom,audio_ml {
+			qcom,dma-heap-name = "qcom,audio-ml";
+			qcom,dma-heap-type = <HEAP_TYPE_CMA>;
+			memory-region = <&audio_cma_mem>;
 		};
 	};
 };
