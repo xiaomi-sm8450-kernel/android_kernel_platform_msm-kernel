@@ -5,8 +5,9 @@
  * SPDX-License-Identifier: GPL-2.0
  */
 
-#include <linux/hwid.h>
 #include <linux/module.h>
+
+#include "hwid.h"
 
 #define HW_MAJOR_VERSION_SHIFT      16
 #define HW_MINOR_VERSION_SHIFT      0
