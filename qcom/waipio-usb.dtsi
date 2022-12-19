@@ -333,8 +333,4 @@
 		qcom,usb-audio-intr-num = <2>;
 	};
 
-	usb_nop_phy: usb_nop_phy {
-		compatible = "usb-nop-xceiv";
-	};
-
 };
