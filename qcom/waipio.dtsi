@@ -1420,7 +1420,7 @@
 		qcom,spss-emul-type-reg-addr = <0x01fc8004>;
 		pil-mem = <&spss_region_mem>;
 		qcom,pil-size = <0x0F0000>; // padding to 960KB
-		status = "ok";
+		status = "disabled";
 	};
 
 	qcom,pmic_glink {
