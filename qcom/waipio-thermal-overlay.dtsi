@@ -23,6 +23,11 @@
 				cooling-device = <&cdsp_sw 2 2>;
 			};
 
+			vbat_cpu_5 {
+				trip = <&b_bcl_lvl0>;
+				cooling-device = <&cpu5_pause 1 1>;
+			};
+
 			vbat_gpu0 {
 				trip = <&b_bcl_lvl0>;
 				cooling-device = <&msm_gpu 2 2>;
@@ -50,6 +55,11 @@
 			vbat_cdsp1 {
 				trip = <&b_bcl_lvl1>;
 				cooling-device = <&cdsp_sw 4 4>;
+			};
+
+			vbat_cpu_6_7 {
+				trip = <&b_bcl_lvl1>;
+				cooling-device = <&cpu_6_7_pause 1 1>;
 			};
 
 			vbat_gpu1 {
@@ -95,6 +105,11 @@
 				cooling-device = <&cdsp_sw 2 2>;
 			};
 
+			vph_cpu_5 {
+				trip = <&c_bcl_lvl0>;
+				cooling-device = <&cpu5_pause 1 1>;
+			};
+
 			vph_gpu0 {
 				trip = <&c_bcl_lvl0>;
 				cooling-device = <&msm_gpu 2 2>;
@@ -122,6 +137,11 @@
 			vph_cdsp1 {
 				trip = <&c_bcl_lvl1>;
 				cooling-device = <&cdsp_sw 4 4>;
+			};
+
+			vph_cpu_6_7 {
+				trip = <&c_bcl_lvl1>;
+				cooling-device = <&cpu_6_7_pause 1 1>;
 			};
 
 			vph_gpu1 {
@@ -156,6 +176,10 @@
 				trip = <&pm8450_trip0>;
 				cooling-device = <&CPU7 15 THERMAL_NO_LIMIT>;
 			};
+            pm8450_apc1 {
+                trip = <&pm8450_trip0>;
+                cooling-device = <&APC1_pause 1 1>;
+            };
 		};
 	};
 
@@ -175,6 +199,11 @@
 				trip = <&pm8350_trip0>;
 				cooling-device = <&CPU7 15 THERMAL_NO_LIMIT>;
 			};
+
+            pm8350_apc1 {
+				trip = <&pm8350_trip0>;
+				cooling-device = <&APC1_pause 1 1>;
+            };
 		};
 	};
 
