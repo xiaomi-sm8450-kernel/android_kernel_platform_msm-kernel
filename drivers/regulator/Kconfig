@@ -1566,4 +1566,12 @@ config VIRTIO_REGULATOR
 	  regulator for pass through peripheral devices via regulator backend in
 	  host.
 
+config REGULATOR_WL2866D
+	tristate "WILL Semi Technologies Inc. WL2866D regulator driver"
+	depends on I2C
+	help
+	  This driver controls WL2866D PMIC chip and the voltage
+	  regulators found in WILL Semi Technologies Inc. WL2866D
+	  PMIC.
+
 endif
