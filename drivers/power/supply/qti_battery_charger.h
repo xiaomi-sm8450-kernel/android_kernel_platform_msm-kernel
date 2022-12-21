@@ -129,6 +129,7 @@ enum usb_property_id {
 	USB_TYPEC_COMPLIANT,
 	USB_SCOPE,
 	USB_CONNECTOR_TYPE,
+	F_ACTIVE,
 	USB_PROP_MAX,
 };
 
