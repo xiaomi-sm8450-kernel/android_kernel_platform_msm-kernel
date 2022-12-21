@@ -930,6 +930,13 @@ config LEDS_QPNP_VIBRATOR_LDO
 	  To compile this driver as a module, choose M here: the module
 	  will be called leds-qpnp-vibrator-ldo.
 
+config LEDS_AW_22XXX
+	tristate "LED Support for AW22XXX"
+	depends on LEDS_CLASS && I2C
+	help
+	  this option enables support for the AW 22XXX RGB LED connected
+	  through I2C. Say Y to enable support for the AW 22XXX LED
+
 source "drivers/leds/blink/Kconfig"
 
 comment "Flash and Torch LED drivers"
