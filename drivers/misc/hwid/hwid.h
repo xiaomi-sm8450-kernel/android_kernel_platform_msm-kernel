@@ -14,6 +14,7 @@
 #define HARDWARE_PROJECT_L1         HARDWARE_PROJECT_UNKNOWN
 #define HARDWARE_PROJECT_L2         1
 #define HARDWARE_PROJECT_L3         2
+#define HARDWARE_PROJECT_L9S        HARDWARE_PROJECT_UNKNOWN
 
 typedef enum {
 	CountryCN = 0x00,
