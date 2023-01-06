@@ -3,6 +3,7 @@
  * udc.c - Core UDC Framework
  *
  * Copyright (C) 2010 Texas Instruments
+ * Copyright (C) 2021 XiaoMi, Inc.
  * Author: Felipe Balbi <balbi@ti.com>
  */
 
