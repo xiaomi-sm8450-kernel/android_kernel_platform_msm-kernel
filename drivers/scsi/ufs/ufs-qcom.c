@@ -5024,9 +5024,8 @@ static int ufs_cpufreq_status(void)
 
 static int ufs_qcom_read_boot_config(struct platform_device *pdev)
 {
-	u8 *buf;
-	size_t len;
-	u32 data;
+	u32 *buf;
+	size_t len, data;
 	struct nvmem_cell *cell;
 
 	cell = nvmem_cell_get(&pdev->dev, "boot_conf");
@@ -5035,7 +5034,7 @@ static int ufs_qcom_read_boot_config(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
-	buf = (u8 *)nvmem_cell_read(cell, &len);
+	buf = nvmem_cell_read(cell, &len);
 	if (IS_ERR(buf)) {
 		dev_err(&pdev->dev, "nvmem read err\n");
 		return -EINVAL;
