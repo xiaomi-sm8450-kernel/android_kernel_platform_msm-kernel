@@ -1113,7 +1113,7 @@ void update_touch_irq_no(int irq_no)
 	sysfs_notify(&xiaomi_touch_dev.dev->kobj, NULL,
 			 "touch_irq_no");
 }
-EXPORT_SYMBOL_GPL(update_active_status);
+EXPORT_SYMBOL_GPL(update_touch_irq_no);
 
 static ssize_t touch_irq_no_show(struct device *dev,
 				     struct device_attribute *attr, char *buf)
