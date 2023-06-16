@@ -6658,6 +6658,10 @@ static int fts_set_cur_value(int mode, int value)
 		return 0;
 	}
 
+	if (mode == Touch_Report_Rate && fts_info && value >= 0) {
+		fts_set_report_rate(fts_info, value);
+	}
+
 	if (mode < Touch_Mode_NUM && mode >= 0) {
 
 		xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE] = value;
