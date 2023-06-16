@@ -7856,6 +7856,10 @@ static int parse_dt(struct device *dev, struct fts_hw_platform_data *bdata)
 	    of_property_read_bool(np, "fts,swap-y");
 	bdata->support_fod =
 	    of_property_read_bool(np, "fts,support-fod");
+	bdata->support_thp =
+	    of_property_read_bool(np, "fts,support-thp");
+	bdata->support_thp_fw =
+	    of_property_read_bool(np, "fts,support-thp-fw");
 	bdata->support_vsync_mode =
 	    of_property_read_bool(np, "fts,support-vsync-mode");
 
