@@ -2880,25 +2880,6 @@ static int fts_set_report_rate(struct fts_ts_info *info, u32 rate)
 	return res;
 }
 
-static int get_slot_trackingId(struct fts_ts_info *info)
-{
-	struct input_mt *mt = info->input_dev->mt;
-	struct input_mt_slot *slot;
-	int id;
-
-	if (!mt)
-		return false;
-
-	slot = &mt->slots[mt->slot];
-	slot->frame = mt->frame;
-
-	id = input_mt_get_value(slot, ABS_MT_TRACKING_ID);
-	if (id < 0)
-		id = -1;
-
-	return id;
-}
-
 int fts_hover_auto_tune(struct fts_ts_info *info)
 {
 	int res = OK;
