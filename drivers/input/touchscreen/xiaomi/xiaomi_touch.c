@@ -1407,7 +1407,7 @@ static ssize_t tp_hal_version_write(struct file *file, const char __user *buf,
 	return count;
 }
 
-static const struct proc_ops fts_fw_version_ops = {
+static const struct proc_ops tp_hal_version_ops = {
 	.proc_read = tp_hal_version_read,
 	.proc_write = tp_hal_version_write,
 };
