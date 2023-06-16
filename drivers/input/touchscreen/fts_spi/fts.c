@@ -6957,31 +6957,6 @@ static int fts_set_vsync_mode(struct fts_ts_info *info, u32 fps)
 }
 #endif
 
-static int fts_up_interrups_mode(struct fts_ts_info *info, int enable)
-{
-	int res = 0;
-	u8 cmd[3] = {0xC0, 0x18, 0x00};
-
-	if (!info)
-		return 0;
-
-	if (enable)
-		cmd[2] = 0x1;
-
-	res = fts_write_dma_safe(cmd, ARRAY_SIZE(cmd));
-	if (res < OK)
-		logError(1, "%s %s: fail:%d\n", tag, __func__, res);
-	else
-		logError(1, "%s %s enable:%d successfully\n", tag, __func__, enable);
-
-	return res;
-}
-
-static int fts_set_up_interrupts_mode(int enable)
-{
-	return	fts_up_interrups_mode(fts_info, enable);
-}
-
 /**
  * Resume work function which perform a system reset, clean all the touches from the linux input system and prepare the ground for enabling the sensing
  */
@@ -9319,7 +9294,6 @@ static int fts_probe(struct spi_device *client)
 	xiaomi_touch_interfaces.get_touch_y_resolution = fts_get_y_resolution;
 	xiaomi_touch_interfaces.get_touch_super_resolution_factor = fts_get_touch_super_resolution_factor;
 	xiaomi_touch_interfaces.enable_clicktouch_raw = fts_enable_click_touch_raw;
-	xiaomi_touch_interfaces.set_up_interrupt_mode = fts_set_up_interrupts_mode;
 	xiaomitouch_register_modedata(0, &xiaomi_touch_interfaces);
 	fts_read_touchmode_data();
 	fts_init_touchmode_data();
