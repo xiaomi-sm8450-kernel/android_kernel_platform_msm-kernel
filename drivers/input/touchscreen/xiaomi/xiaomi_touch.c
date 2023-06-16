@@ -1365,9 +1365,12 @@ static ssize_t tp_hal_version_read(struct file *file, char __user *buf,
 		return 0;
 	}
 
-	ret = copy_to_user(buf, &touch_data->tp_hal_version, strlen(&touch_data->tp_hal_version));
+	//const char * version;
+	//version = touch_data->tp_hal_version;
+
+	ret = copy_to_user(buf, &touch_data->tp_hal_version, strlen(touch_data->tp_hal_version));
 	if (ret == 0) {
-		*pos += strlen(&touch_data->tp_hal_version);
+		*pos += strlen(touch_data->tp_hal_version);
 	} else {
 		return -EFAULT;
 	}
