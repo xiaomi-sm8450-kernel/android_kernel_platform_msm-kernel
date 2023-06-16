@@ -1109,7 +1109,7 @@ void update_touch_irq_no(int irq_no)
 		return;
 	}
 
-	touch_pdata->touch_data[0]->irq_no = status;
+	touch_pdata->touch_data[0]->irq_no = irq_no;
 	sysfs_notify(&xiaomi_touch_dev.dev->kobj, NULL,
 			 "touch_irq_no");
 }
