@@ -6629,13 +6629,9 @@ static int fts_set_cur_value(int mode, int value)
 	}
 
 #ifdef FTS_POWER_SAVE_MODE
-	if (mode == Touch_Idle_Time && fts_info && value>= 0)
+	if (mode == Touch_Idle_Time && fts_info && value >= 0)
 		return fts_change_enter_doze_time(value);
 #endif
-
-	if (mode == THP_HAL_REPORT_RATE && fts_info && value >= 0) {
-		return fts_set_report_rate(fts_info, value);
-	}
 
 	if (mode == THP_LOCK_SCAN_MODE && fts_info && value >= 0) {
 		if (fts_info->enable_touch_raw)
@@ -6646,6 +6642,32 @@ static int fts_set_cur_value(int mode, int value)
 	if (mode == THP_FOD_DOWNUP_CTL && fts_info && value >= 0) {
 		if (fts_info->enable_touch_raw)
 			fts_set_fod_downup(fts_info, value);
+		return 0;
+	}
+
+	if (mode == THP_SELF_CAP_SCAN && fts_info && value >= 0) {
+		if (fts_info->enable_touch_raw)
+			fts_enable_thp_selfcap_scan(value);
+		return 0;
+	}
+
+	if (mode == THP_REPORT_POINT_SWITCH && fts_info && value >= 0) {
+		fts_enable_thp_onoff(value);
+		return 0;
+	}
+
+	if (mode == THP_HAL_INIT_READY && fts_info && value >= 0) {
+		schedule_delayed_work(&fts_info->thp_signal_work, msecs_to_jiffies(1000));
+		return 0;
+	}
+
+	if (mode == THP_HAL_REPORT_RATE && fts_info && value >= 0) {
+		return fts_set_report_rate(fts_info, value);
+	}
+
+	if (mode == THP_HAL_VSYNC_MODE && fts_info && value >= 0) {
+		if (fts_info->enable_touch_raw)
+			fts_set_vsync_mode(fts_info, value);
 		return 0;
 	}
 
