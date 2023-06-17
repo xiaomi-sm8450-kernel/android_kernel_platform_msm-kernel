@@ -6634,18 +6634,19 @@ static int fts_set_cur_value(int mode, int value)
 #endif
 
 	if (mode == Touch_Report_Rate && fts_info && value >= 0) {
-		fts_set_report_rate(fts_info, value);
+		return fts_set_report_rate(fts_info, value);
 	}
 
 	if (mode == THP_LOCK_SCAN_MODE && fts_info && value >= 0) {
 		if (fts_info->enable_touch_raw)
-			fts_lock_scan_mode(value);
+			return fts_lock_scan_mode(value);
 		return 0;
 	}
 
 	if (mode == THP_FOD_DOWNUP_CTL && fts_info && value >= 0) {
 		if (fts_info->enable_touch_raw)
 			fts_set_fod_downup(fts_info, value);
+		return 0;
 	}
 
 	if (mode < Touch_Mode_NUM && mode >= 0) {
