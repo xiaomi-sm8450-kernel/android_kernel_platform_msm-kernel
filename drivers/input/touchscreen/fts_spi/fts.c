@@ -2539,7 +2539,6 @@ static int get_ms_strength_data(struct fts_ts_info *info)
 	return node_data_size * BYTES_PER_NODE;
 }
 
-#ifdef TOUCH_THP_SUPPORT
 #define CRC32_POLYNOMIAL         0xE89061DB
 
 /***********************************************************************************
@@ -2765,141 +2764,141 @@ static int fts_enable_thp_cmd (bool on)
 
 int fts_enable_touch_raw(bool en)
 {
-#ifdef TOUCH_THP_FW
-	char ret;
-	char mode[2];
-	const char *fw_name;
-	bool update = false;
-	u8 error_to_search[4] = {EVT_TYPE_ERROR_CRC_CX_HEAD, EVT_TYPE_ERROR_CRC_CX,
-		EVT_TYPE_ERROR_CRC_CX_SUB_HEAD, EVT_TYPE_ERROR_CRC_CX_SUB
-	};
-	int init_type = NO_INIT;
-	int error = 0;
+	if (fts_info->board->support_thp_fw) {
+		char ret;
+		char mode[2];
+		const char *fw_name;
+		bool update = false;
+		u8 error_to_search[4] = {EVT_TYPE_ERROR_CRC_CX_HEAD, EVT_TYPE_ERROR_CRC_CX,
+			EVT_TYPE_ERROR_CRC_CX_SUB_HEAD, EVT_TYPE_ERROR_CRC_CX_SUB
+		};
+		int init_type = NO_INIT;
+		int error = 0;
 
-	fts_disableInterrupt();
-	if (en) {
-		fw_name = fts_info->board->thp_fw_name;
+		fts_disableInterrupt();
+		if (en) {
+			fw_name = fts_info->board->thp_fw_name;
 
-		if (fw_name != NULL && !fts_info->enable_thp_fw) {
-			ret = flashProcedure(fw_name, mode[0], mode[1]);
-			if (ret < OK) {
-				logError(1, "%s  %s Unable to upgrade firmware! ERROR %08X\n",
-					 tag, __func__, ret);
-				fts_enableInterrupt();
-				return -1;
-			}
-			update = true;
-
-			fts_info->enable_thp_fw = true;
-		}
-		fts_info->enable_touch_raw = true;
-		/*mod_timer(&fts_info->strength_timer, jiffies + msecs_to_jiffies(10));*/
-	} else {
-		fw_name = fts_get_config(fts_info);
-		if (fw_name != NULL && fts_info->enable_thp_fw) {
-			ret = flashProcedure(fw_name, mode[0], mode[1]);
-			if (ret < OK) {
-				logError(1, "%s  %s Unable to upgrade firmware! ERROR %08X\n",
-					 tag, __func__, ret);
-				fts_enableInterrupt();
-				return -1;
-			}
-			update = true;
-			fts_info->enable_thp_fw = false;
-		}
-		fts_info->enable_touch_raw = false;
-	}
-	if (update) {
-		logError(1, "%s %s: Verifying if CX CRC Error...\n", tag, __func__,
-			 ret);
-		ret = fts_system_reset();
-		if (ret >= OK) {
-			ret = pollForErrorType(error_to_search, 4);
-			if (ret < OK) {
-				logError(1, "%s %s: No Cx CRC Error Found! \n", tag,
-					 __func__);
-				logError(1, "%s %s: Verifying if Panel CRC Error... \n",
-					 tag, __func__);
-				error_to_search[0] = EVT_TYPE_ERROR_CRC_PANEL_HEAD;
-				error_to_search[1] = EVT_TYPE_ERROR_CRC_PANEL;
-				ret = pollForErrorType(error_to_search, 2);
+			if (fw_name != NULL && !fts_info->enable_thp_fw) {
+				ret = flashProcedure(fw_name, mode[0], mode[1]);
 				if (ret < OK) {
-					logError(1,
-						 "%s %s: No Panel CRC Error Found! \n",
-						 tag, __func__);
-					init_type = NO_INIT;
+					logError(1, "%s  %s Unable to upgrade firmware! ERROR %08X\n",
+						tag, __func__, ret);
+					fts_enableInterrupt();
+					return -1;
+				}
+				update = true;
+
+				fts_info->enable_thp_fw = true;
+			}
+			fts_info->enable_touch_raw = true;
+			/*mod_timer(&fts_info->strength_timer, jiffies + msecs_to_jiffies(10));*/
+		} else {
+			fw_name = fts_get_config(fts_info);
+			if (fw_name != NULL && fts_info->enable_thp_fw) {
+				ret = flashProcedure(fw_name, mode[0], mode[1]);
+				if (ret < OK) {
+					logError(1, "%s  %s Unable to upgrade firmware! ERROR %08X\n",
+						tag, __func__, ret);
+					fts_enableInterrupt();
+					return -1;
+				}
+				update = true;
+				fts_info->enable_thp_fw = false;
+			}
+			fts_info->enable_touch_raw = false;
+		}
+		if (update) {
+			logError(1, "%s %s: Verifying if CX CRC Error...\n", tag, __func__,
+				ret);
+			ret = fts_system_reset();
+			if (ret >= OK) {
+				ret = pollForErrorType(error_to_search, 4);
+				if (ret < OK) {
+					logError(1, "%s %s: No Cx CRC Error Found! \n", tag,
+						__func__);
+					logError(1, "%s %s: Verifying if Panel CRC Error... \n",
+						tag, __func__);
+					error_to_search[0] = EVT_TYPE_ERROR_CRC_PANEL_HEAD;
+					error_to_search[1] = EVT_TYPE_ERROR_CRC_PANEL;
+					ret = pollForErrorType(error_to_search, 2);
+					if (ret < OK) {
+						logError(1,
+							"%s %s: No Panel CRC Error Found! \n",
+							tag, __func__);
+						init_type = NO_INIT;
+					} else {
+						logError(1,
+							"%s %s: Panel CRC Error FOUND! CRC ERROR = %02X\n",
+							tag, __func__, ret);
+						init_type = SPECIAL_PANEL_INIT;
+					}
 				} else {
 					logError(1,
-						 "%s %s: Panel CRC Error FOUND! CRC ERROR = %02X\n",
-						 tag, __func__, ret);
-					init_type = SPECIAL_PANEL_INIT;
+						"%s %s: Cx CRC Error FOUND! CRC ERROR = %02X\n",
+						tag, __func__, ret);
+
+					logError(1,
+						"%s %s: Try to recovery with CX in fw file...\n",
+						tag, __func__, ret);
+					flashProcedure(fw_name, CRC_CX, 0);
+					logError(1, "%s %s: Refresh panel init data... \n", tag,
+						__func__, ret);
 				}
 			} else {
 				logError(1,
-					 "%s %s: Cx CRC Error FOUND! CRC ERROR = %02X\n",
-					 tag, __func__, ret);
-
-				logError(1,
-					 "%s %s: Try to recovery with CX in fw file...\n",
-					 tag, __func__, ret);
-				flashProcedure(fw_name, CRC_CX, 0);
-				logError(1, "%s %s: Refresh panel init data... \n", tag,
-					 __func__, ret);
+					"%s %s: Error while executing system reset! ERROR %08X\n",
+					tag, __func__, ret);
 			}
-		} else {
-			logError(1,
-				 "%s %s: Error while executing system reset! ERROR %08X\n",
-				 tag, __func__, ret);
-		}
 
-		if (init_type == NO_INIT) {
+			if (init_type == NO_INIT) {
 #ifdef PRE_SAVED_METHOD
-			if (systemInfo.u8_cfgAfeVer != systemInfo.u8_cxAfeVer) {
-				init_type = SPECIAL_FULL_PANEL_INIT;
-				logError(1,
-					 "%s %s: Different CX AFE Ver: %02X != %02X... Execute FULL Panel Init! \n",
-					 tag, __func__, systemInfo.u8_cfgAfeVer,
-					 systemInfo.u8_cxAfeVer);
-			} else
+				if (systemInfo.u8_cfgAfeVer != systemInfo.u8_cxAfeVer) {
+					init_type = SPECIAL_FULL_PANEL_INIT;
+					logError(1,
+						"%s %s: Different CX AFE Ver: %02X != %02X... Execute FULL Panel Init! \n",
+						tag, __func__, systemInfo.u8_cfgAfeVer,
+						systemInfo.u8_cxAfeVer);
+				} else
 #endif
 
-			if (systemInfo.u8_cfgAfeVer != systemInfo.u8_panelCfgAfeVer) {
-				init_type = SPECIAL_PANEL_INIT;
-				logError(1,
-					 "%s %s: Different Panel AFE Ver: %02X != %02X... Execute Panel Init! \n",
-					 tag, __func__, systemInfo.u8_cfgAfeVer,
-					 systemInfo.u8_panelCfgAfeVer);
-			} else {
-				init_type = NO_INIT;
+				if (systemInfo.u8_cfgAfeVer != systemInfo.u8_panelCfgAfeVer) {
+					init_type = SPECIAL_PANEL_INIT;
+					logError(1,
+						"%s %s: Different Panel AFE Ver: %02X != %02X... Execute Panel Init! \n",
+						tag, __func__, systemInfo.u8_cfgAfeVer,
+						systemInfo.u8_panelCfgAfeVer);
+				} else {
+					init_type = NO_INIT;
+				}
 			}
-		}
 
-		if (init_type != NO_INIT) {
-			error = fts_chip_initialization(fts_info, init_type);
-			if (error < OK) {
-				logError(1,
-					 "%s %s Cannot initialize the chip ERROR %08X\n",
-					 tag, __func__, error);
+			if (init_type != NO_INIT) {
+				error = fts_chip_initialization(fts_info, init_type);
+				if (error < OK) {
+					logError(1,
+						"%s %s Cannot initialize the chip ERROR %08X\n",
+						tag, __func__, error);
+				}
 			}
 		}
-	}
-	fts_mode_handler(fts_info, 1);
-	release_all_touches(fts_info);
-	fts_enableInterrupt();
-#else
-	if (en) {
-		fts_info->enable_thp_fw = true;
-		fts_info->enable_touch_raw = true;
-		/*mod_timer(&fts_info->strength_timer, jiffies + msecs_to_jiffies(10));*/
+		fts_mode_handler(fts_info, 1);
+		release_all_touches(fts_info);
+		fts_enableInterrupt();
 	} else {
-		fts_info->enable_thp_fw = false;
-		fts_info->enable_touch_raw = false;
+		if (en) {
+			fts_info->enable_thp_fw = true;
+			fts_info->enable_touch_raw = true;
+			/*mod_timer(&fts_info->strength_timer, jiffies + msecs_to_jiffies(10));*/
+		} else {
+			fts_info->enable_thp_fw = false;
+			fts_info->enable_touch_raw = false;
+		}
+		fts_enable_thp_cmd(en);
 	}
-	fts_enable_thp_cmd(en);
-#endif
 	return 0;
 }
-#endif
+
 int fts_hover_auto_tune(struct fts_ts_info *info)
 {
 	int res = OK;
@@ -5055,8 +5054,7 @@ static irqreturn_t fts_event_handler(int irq, void *ts_info)
 #endif
 	info->temp_touch_id = 0;
 	cpu_latency_qos_add_request(&info->pm_qos_req_irq, 0);
-#ifdef TOUCH_THP_SUPPORT
-	if (info->enable_touch_raw) {
+	if (info->board->support_thp && info->enable_touch_raw) {
 		count = fts_read_thp_frame(info);
 		copy_touch_rawdata((u8 *)(&info->thp_frame), count);
 		clear_interrupt();
@@ -5064,9 +5062,7 @@ static irqreturn_t fts_event_handler(int irq, void *ts_info)
 		count  = 0;
 		if (info->thp_frame.thp_frame_buf[0x16] == 0)
 			goto end;
-	} else
-#endif
-	if (info->clicktouch_count) {
+	} else if (info->clicktouch_count) {
 		count = get_ms_strength_data(info);
 		update_knock_data((u8 *)info->strength_buf, count, info->clicktouch_num - info->clicktouch_count);
 		count  = 0;
@@ -5112,9 +5108,7 @@ static irqreturn_t fts_event_handler(int irq, void *ts_info)
 		}
 	}
 	input_sync(info->input_dev);
-#ifdef TOUCH_THP_SUPPORT
 end:
-#endif
 	if (info->clicktouch_num) {
 		if (info->touch_id && info->clicktouch_count) {
 			info->clicktouch_count--;
@@ -6658,13 +6652,11 @@ static int fts_set_cur_value(int mode, int value)
 		return fts_change_enter_doze_time(value);
 #endif
 
-#ifdef TOUCH_THP_SUPPORT
-	if (mode == THP_LOCK_SCAN_MODE && fts_info && value >= 0) {
+	if (fts_info->board->support_thp && mode == THP_LOCK_SCAN_MODE && fts_info && value >= 0) {
 		if (fts_info->enable_touch_raw)
 			fts_lock_scan_mode(value);
 		return 0;
 	}
-#endif
 
 	if (mode < Touch_Mode_NUM && mode >= 0) {
 
@@ -7066,12 +7058,10 @@ static void fts_resume_work(struct work_struct *work)
 		fts_palm_sensor_cmd(info->palm_sensor_switch);
 	}
 #endif
-#ifdef TOUCH_THP_SUPPORT
-	if (info->enable_touch_raw) {
+	if (info->board->support_thp && info->enable_touch_raw) {
 		msleep(50);
 		fts_enable_thp_cmd(1);
 	}
-#endif
 	xiaomi_touch_set_suspend_state(XIAOMI_TOUCH_RESUME);
 
 	pm_relax(info->dev);
@@ -8109,6 +8099,10 @@ static int parse_dt(struct device *dev, struct fts_hw_platform_data *bdata)
 	    of_property_read_bool(np, "fts,swap-y");
 	bdata->support_fod =
 	    of_property_read_bool(np, "fts,support-fod");
+	bdata->support_thp =
+	    of_property_read_bool(np, "fts,support-thp");
+	bdata->support_thp_fw =
+	    of_property_read_bool(np, "fts,support-thp-fw");
 	bdata->support_vsync_mode =
 	    of_property_read_bool(np, "fts,support-vsync-mode");
 
@@ -9315,10 +9309,10 @@ static int fts_probe(struct spi_device *client)
 	xiaomi_touch_interfaces.panel_display_read = fts_panel_display_read;
 	xiaomi_touch_interfaces.touch_vendor_read = fts_touch_vendor_read;
 	xiaomi_touch_interfaces.setModeLongValue = fts_set_mode_long_value;
-#ifdef TOUCH_THP_SUPPORT
-	xiaomi_touch_interfaces.enable_touch_raw = fts_enable_touch_raw;
-	xiaomi_touch_interfaces.enable_touch_delta = fts_enable_touch_delta;
-#endif
+	if (info->board->support_thp) {
+		xiaomi_touch_interfaces.enable_touch_raw = fts_enable_touch_raw;
+		xiaomi_touch_interfaces.enable_touch_delta = fts_enable_touch_delta;
+	}
 	xiaomi_touch_interfaces.get_touch_rx_num = fts_get_rx_num;
 	xiaomi_touch_interfaces.get_touch_tx_num = fts_get_tx_num;
 	xiaomi_touch_interfaces.get_touch_x_resolution = fts_get_x_resolution;
