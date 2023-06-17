@@ -6633,7 +6633,7 @@ static int fts_set_cur_value(int mode, int value)
 		return fts_change_enter_doze_time(value);
 #endif
 
-	if (mode == Touch_Report_Rate && fts_info && value >= 0) {
+	if (mode == THP_HAL_REPORT_RATE && fts_info && value >= 0) {
 		return fts_set_report_rate(fts_info, value);
 	}
 
