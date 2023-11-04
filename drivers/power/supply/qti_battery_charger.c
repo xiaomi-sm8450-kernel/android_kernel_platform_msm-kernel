@@ -32,7 +32,6 @@ static int blank_state = 1, sec_blank_state = 1;
 #endif
 
 #include "qti_battery_charger.h"
-#include "qti_typec_class.h"
 
 static const int battery_prop_map[BATT_PROP_MAX] = {
 	[BATT_STATUS]		= POWER_SUPPLY_PROP_STATUS,
