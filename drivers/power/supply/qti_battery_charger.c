@@ -421,7 +421,7 @@ static void handle_message(struct battery_chg_dev *bcdev, void *data,
 			ack_set = true;
 			break;
 		}
-		if (validate_message(bcdev, resp_msg, len) &&
+		if (validate_message(resp_msg, len) &&
 			resp_msg->property_id < pst->prop_count) {
 			pst->prop[resp_msg->property_id] = resp_msg->value;
 			ack_set = true;
