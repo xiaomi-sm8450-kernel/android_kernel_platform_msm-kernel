@@ -41,13 +41,6 @@
 #define WLS_FW_BUF_SIZE			128
 #define DEFAULT_RESTRICT_FCC_UA		1000000
 
-<<<<<<< HEAD
-=======
-enum usb_connector_type {
-	USB_CONNECTOR_TYPE_TYPEC,
-	USB_CONNECTOR_TYPE_MICRO_USB,
-};
-
 #if defined(CONFIG_BQ_FG_2S)
 #define BATTERY_DIGEST_LEN 20
 #else
@@ -71,7 +64,6 @@ enum uvdm_state {
 	USBPD_UVDM_REVERSE_AUTHEN,
 	USBPD_UVDM_CONNECT,
 };
->>>>>>> f9cc2df6e540 (power: supply: qti_battery_charger: Import xiaomi changes)
 enum psy_type {
 	PSY_TYPE_BATTERY,
 	PSY_TYPE_USB,
