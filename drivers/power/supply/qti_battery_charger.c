@@ -2129,7 +2129,7 @@ static int battery_chg_register_panel_notifier(struct battery_chg_dev *bcdev)
 
 	cookie = panel_event_notifier_register(
 			PANEL_EVENT_NOTIFICATION_PRIMARY,
-			PANEL_EVENT_NOTIFIER_CLIENT_BATTERY_CHARGER,
+			PANEL_EVENT_NOTIFIER_CLIENT_SECONDARY_TOUCH,
 			active_panel,
 			panel_event_notifier_callback,
 			(void *)bcdev);
