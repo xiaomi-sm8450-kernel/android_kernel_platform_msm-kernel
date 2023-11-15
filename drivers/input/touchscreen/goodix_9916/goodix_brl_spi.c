@@ -313,6 +313,7 @@ static const struct of_device_id spi_matchs[] = {
 //	{.compatible = "goodix,gt9966S",},
 //	{.compatible = "goodix,gt9916S",},
 	{.compatible = "xiaomi,l12-spi",},
+	{.compatible = "xiaomi,m11a-spi",},
 	{},
 };
 #endif

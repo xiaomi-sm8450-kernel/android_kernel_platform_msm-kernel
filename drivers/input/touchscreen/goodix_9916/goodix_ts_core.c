@@ -37,7 +37,6 @@
 #define PINCTRL_STATE_ACTIVE		"pmx_ts_active"
 #define PINCTRL_STATE_SUSPEND		"pmx_ts_suspend"
 #define PINCTRL_STATE_BOOT			"pmx_ts_boot"
-#define L12_ID_DET (301+119)
 #ifdef CONFIG_TOUCH_BOOST
 extern void touch_irq_boost(void);
 #endif
@@ -3482,16 +3481,6 @@ static struct platform_driver goodix_ts_driver = {
 static int __init goodix_ts_core_init(void)
 {
 	int ret;
-	int gpio_119;
-	gpio_direction_input(L12_ID_DET);
-	gpio_119 = gpio_get_value(L12_ID_DET);
-	pr_info("gpio_119 = %d\n",gpio_119);
-	if(!gpio_119){
-		pr_info("TP is goodix");
-	}else{
-		pr_info("TP is st 61y");
-		return 0;
-	}
 
 	pr_info("Core layer init:%s", GOODIX_DRIVER_VERSION);
 #ifdef CONFIG_TOUCHSCREEN_GOODIX_BRL_SPI
