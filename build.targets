@@ -6,5 +6,6 @@ build.config.neo_la
 build.config.msm.parrot
 
 build.config.msm.cupid
+build.config.msm.marble
 build.config.msm.mondrian
 build.config.msm.zeus
